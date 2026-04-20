@@ -1,0 +1,19 @@
+<resources>
+    <!-- Padding & Margins -->
+    <dimen name="padding_small">8.dp</dimen>
+    <dimen name="padding_medium">16.dp</dimen>
+    <dimen name="padding_large">24.dp</dimen>
+    <dimen name="padding_extra_large">32.dp</dimen>
+
+    <!-- Font Sizes -->
+    <dimen name="text_size_small">14.sp</dimen>
+    <dimen name="text_size_medium">16.sp</dimen>
+    <dimen name="text_size_large">24.sp</dimen>
+    <dimen name="text_size_extra_large">32.sp</dimen>
+
+    <!-- Component Sizes -->
+    <dimen name="icon_size_small">24.dp</dimen>
+    <dimen name="button_height">48.dp</dimen>
+    <dimen name="progress_indicator_size">24.dp</dimen>
+    <dimen name="progress_indicator_stroke">2.dp</dimen>
+</resources>

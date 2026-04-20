@@ -9,6 +9,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import com.example.ndejjeconnect.R
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.AuthState
 
@@ -38,58 +41,58 @@ fun RegisterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(dimensionResource(id = R.dimen.padding_large)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         // University Branding Header Placeholder
         Text(
-            text = "NDEJJE UNIVERSITY",
-            fontSize = 24.sp,
+            text = stringResource(id = R.string.university_name),
+            fontSize = dimensionResource(id = R.dimen.text_size_large).value.sp,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "Create Student Account",
-            fontSize = 16.sp,
-            modifier = Modifier.padding(bottom = 32.dp)
+            text = stringResource(id = R.string.create_account),
+            fontSize = dimensionResource(id = R.dimen.text_size_medium).value.sp,
+            modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_extra_large))
         )
 
         if (authState is AuthState.Error) {
             Text(
                 text = (authState as AuthState.Error).message,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_medium))
             )
         }
 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Full Name") },
+            label = { Text(stringResource(id = R.string.full_name)) },
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_medium)))
 
         OutlinedTextField(
             value = regNumber,
             onValueChange = { regNumber = it },
-            label = { Text("Registration Number") },
+            label = { Text(stringResource(id = R.string.reg_number)) },
             modifier = Modifier.fillMaxWidth()
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_medium)))
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text(stringResource(id = R.string.password)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_extra_large)))
 
         Button(
             onClick = { viewModel.register(name, regNumber, password) },
@@ -98,17 +101,17 @@ fun RegisterScreen(
         ) {
             if (authState is AuthState.Loading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(dimensionResource(id = R.dimen.progress_indicator_size)),
                     color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+                    strokeWidth = dimensionResource(id = R.dimen.progress_indicator_stroke)
                 )
             } else {
-                Text("Register")
+                Text(stringResource(id = R.string.register))
             }
         }
 
         TextButton(onClick = onNavigateToLogin) {
-            Text("Already have an account? Login")
+            Text(stringResource(id = R.string.already_have_account_login))
         }
     }
 }
