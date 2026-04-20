@@ -7,47 +7,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.AuthState
 
 /**
- * View Layer: Authentication (Login Screen)
- * Provides a simple interface for students to log in.
+ * View Layer: Registration Screen
+ * Allows new students to create an account.
  */
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     viewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
+    var name by remember { mutableStateOf("") }
+    var regNumber by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    
     val authState by viewModel.authState.collectAsState()
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
-            onLoginSuccess()
+            onRegisterSuccess()
             viewModel.resetState()
         }
     }
-
-    LoginContent(
-        authState = authState,
-        onLogin = { reg, pass -> viewModel.login(reg, pass) },
-        onNavigateToRegister = onNavigateToRegister
-    )
-}
-
-@Composable
-fun LoginContent(
-    authState: AuthState,
-    onLogin: (String, String) -> Unit,
-    onNavigateToRegister: () -> Unit
-) {
-    var regNumber by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -56,25 +42,35 @@ fun LoginContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // University Branding Header Placeholder
         Text(
-            text = "NdejjeConnect",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
+            text = "NDEJJE UNIVERSITY",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "Student Portal",
+            text = "Create Student Account",
             fontSize = 16.sp,
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
         if (authState is AuthState.Error) {
             Text(
-                text = authState.message,
+                text = (authState as AuthState.Error).message,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Full Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = regNumber,
@@ -96,10 +92,9 @@ fun LoginContent(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { onLogin(regNumber, password) },
+            onClick = { viewModel.register(name, regNumber, password) },
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            enabled = authState !is AuthState.Loading
+            enabled = name.isNotBlank() && regNumber.isNotBlank() && password.isNotBlank() && authState !is AuthState.Loading
         ) {
             if (authState is AuthState.Loading) {
                 CircularProgressIndicator(
@@ -108,24 +103,12 @@ fun LoginContent(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Login", modifier = Modifier.padding(8.dp))
+                Text("Register")
             }
         }
 
-        TextButton(onClick = onNavigateToRegister) {
-            Text("Don't have an account? Sign Up")
+        TextButton(onClick = onNavigateToLogin) {
+            Text("Already have an account? Login")
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        LoginContent(
-            authState = AuthState.Idle,
-            onLogin = { _, _ -> },
-            onNavigateToRegister = {}
-        )
     }
 }

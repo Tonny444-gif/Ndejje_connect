@@ -38,3 +38,15 @@ interface TimetableDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: TimetableEntry)
 }
+
+@Dao
+interface UserDao {
+    @Query("SELECT * FROM users WHERE regNumber = :regNumber LIMIT 1")
+    suspend fun getUserByRegNumber(regNumber: String): User?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUser(user: User)
+
+    @Update
+    suspend fun updateUser(user: User)
+}

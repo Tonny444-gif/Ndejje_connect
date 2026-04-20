@@ -13,6 +13,7 @@ data class Note(
     val title: String,
     val content: String,
     val courseUnit: String,
+    val attachmentUri: String? = null, // Path to attached image or document
     val timestamp: Long = System.currentTimeMillis()
 )
 
@@ -42,4 +43,16 @@ data class TimetableEntry(
     val startTime: String, // e.g., "10:00 AM"
     val endTime: String,   // e.g., "01:00 PM"
     val venue: String
+)
+
+/**
+ * Represents a User/Student in the system.
+ * Model Layer: Handles authentication and profile details.
+ */
+@Entity(tableName = "users")
+data class User(
+    @PrimaryKey val regNumber: String, // Unique identifier (Registration Number)
+    val name: String,
+    val password: String,
+    val profileImageUri: String? = null
 )

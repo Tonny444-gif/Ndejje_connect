@@ -1,16 +1,18 @@
 package com.example.ndejjeconnect.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,23 +22,95 @@ import com.example.ndejjeconnect.viewmodel.NotesViewModel
 
 /**
  * View Layer: Notes Screen
- * Central repository for course notes using a modern Staggered Grid.
+ * Central repository for course notes.
+ * Media-Ready: Includes functionality to attach system files/images.
  */
 @Composable
 fun NotesScreen(viewModel: NotesViewModel) {
     val notes by viewModel.notes.collectAsState()
-    NotesContent(notes = notes)
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    NotesContent(
+        notes = notes,
+        onAddClick = { showAddDialog = true }
+    )
+
+    if (showAddDialog) {
+        AddNoteDialog(
+            onDismiss = { showAddDialog = false },
+            onSave = { title, content, course, uri ->
+                viewModel.addNote(title, content, course, uri)
+                showAddDialog = false
+            }
+        )
+    }
+}
+
+/**
+ * Dialog for adding a new note with optional attachment.
+ */
+@Composable
+fun AddNoteDialog(
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, String?) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    var courseUnit by remember { mutableStateOf("") }
+    var attachmentUri by remember { mutableStateOf<String?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        attachmentUri = uri?.toString()
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("New Course Note") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") })
+                OutlinedTextField(value = courseUnit, onValueChange = { courseUnit = it }, label = { Text("Course Unit") })
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    label = { Text("Content") },
+                    modifier = Modifier.height(120.dp)
+                )
+                
+                TextButton(onClick = { launcher.launch("*/*") }) {
+                    Icon(Icons.Default.AttachFile, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (attachmentUri == null) "Attach Document/Image" else "File Attached ✅")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(title, content, courseUnit, attachmentUri) },
+                enabled = title.isNotBlank() && content.isNotBlank()
+            ) {
+                Text("Save Note")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
 
 /**
  * Stateless UI for the Notes Screen.
- * This separation allows for easier Previewing and Testing.
  */
 @Composable
-fun NotesContent(notes: List<Note>) {
+fun NotesContent(
+    notes: List<Note>,
+    onAddClick: () -> Unit
+) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* Logic to open Add Note Sheet */ }) {
+            FloatingActionButton(onClick = onAddClick) {
                 Icon(Icons.Default.Add, contentDescription = "Add Note")
             }
         }
@@ -103,6 +177,6 @@ fun NotesScreenPreview() {
         Note(title = "Compose Layouts", content = "Rows, Columns, and Boxes...", courseUnit = "UI Design")
     )
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        NotesContent(notes = mockNotes)
+        NotesContent(notes = mockNotes, onAddClick = {})
     }
 }

@@ -11,12 +11,45 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.ndejjeconnect.data.local.Assignment
+import com.example.ndejjeconnect.data.local.TimetableEntry
+import com.example.ndejjeconnect.viewmodel.AuthViewModel
+import com.example.ndejjeconnect.viewmodel.DashboardViewModel
+
 /**
  * View Layer: The Hub (Dashboard Screen)
  * Provides students with a high-level overview of their academic day.
  */
 @Composable
 fun DashboardScreen(
+    authViewModel: AuthViewModel,
+    dashboardViewModel: DashboardViewModel,
+    onNavigateToTimetable: () -> Unit,
+    onNavigateToAssignments: () -> Unit
+) {
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val nextClass by dashboardViewModel.nextClass.collectAsState()
+    val nextAssignment by dashboardViewModel.nextAssignment.collectAsState()
+    val pendingCount by dashboardViewModel.pendingAssignmentsCount.collectAsState()
+
+    DashboardContent(
+        userName = currentUser?.name,
+        nextClass = nextClass,
+        nextAssignment = nextAssignment,
+        pendingCount = pendingCount,
+        onNavigateToTimetable = onNavigateToTimetable,
+        onNavigateToAssignments = onNavigateToAssignments
+    )
+}
+
+@Composable
+fun DashboardContent(
+    userName: String?,
+    nextClass: TimetableEntry?,
+    nextAssignment: Assignment?,
+    pendingCount: Int,
     onNavigateToTimetable: () -> Unit,
     onNavigateToAssignments: () -> Unit
 ) {
@@ -26,7 +59,7 @@ fun DashboardScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Welcome, Student!",
+            text = "Welcome, ${userName ?: "Student"}!",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 24.dp)
@@ -37,16 +70,16 @@ fun DashboardScreen(
         ) {
             item {
                 SummaryCard(
-                    title = "NEXT CLASS: CSC 101",
-                    subtitle = "Venue: Lab 1 @ 8:00 AM",
+                    title = if (nextClass != null) "NEXT CLASS: ${nextClass.courseName}" else "NO CLASSES TODAY",
+                    subtitle = if (nextClass != null) "Venue: ${nextClass.venue} @ ${nextClass.startTime}" else "Enjoy your free time!",
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     onClick = onNavigateToTimetable
                 )
             }
             item {
                 SummaryCard(
-                    title = "2 PENDING ASSIGNMENTS",
-                    subtitle = "Next Due: April 25",
+                    title = if (pendingCount > 0) "$pendingCount PENDING ASSIGNMENTS" else "ALL CAUGHT UP!",
+                    subtitle = if (nextAssignment != null) "Next Due: ${nextAssignment.title}" else "No upcoming deadlines",
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     onClick = onNavigateToAssignments
                 )
@@ -82,6 +115,13 @@ fun SummaryCard(
 @Composable
 fun DashboardScreenPreview() {
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        DashboardScreen(onNavigateToTimetable = {}, onNavigateToAssignments = {})
+        DashboardContent(
+            userName = "John Doe",
+            nextClass = null,
+            nextAssignment = null,
+            pendingCount = 3,
+            onNavigateToTimetable = {},
+            onNavigateToAssignments = {}
+        )
     }
 }

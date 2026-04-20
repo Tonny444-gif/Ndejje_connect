@@ -5,11 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Note::class, Assignment::class, TimetableEntry::class], version = 1, exportSchema = false)
+@Database(entities = [Note::class, Assignment::class, TimetableEntry::class, User::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
     abstract fun assignmentDao(): AssignmentDao
     abstract fun timetableDao(): TimetableDao
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile
@@ -21,7 +22,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "ndejje_connect_db"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

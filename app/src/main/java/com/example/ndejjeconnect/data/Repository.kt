@@ -6,6 +6,8 @@ import com.example.ndejjeconnect.data.local.Note
 import com.example.ndejjeconnect.data.local.NoteDao
 import com.example.ndejjeconnect.data.local.TimetableDao
 import com.example.ndejjeconnect.data.local.TimetableEntry
+import com.example.ndejjeconnect.data.local.User
+import com.example.ndejjeconnect.data.local.UserDao
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -15,7 +17,8 @@ import kotlinx.coroutines.flow.Flow
 class MainRepository(
     private val noteDao: NoteDao,
     private val assignmentDao: AssignmentDao,
-    private val timetableDao: TimetableDao
+    private val timetableDao: TimetableDao,
+    private val userDao: UserDao
 ) {
     // Notes logic
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
@@ -30,4 +33,9 @@ class MainRepository(
     // Timetable logic
     fun getTimetableForDay(day: String): Flow<List<TimetableEntry>> = timetableDao.getTimetableForDay(day)
     suspend fun insertTimetableEntry(entry: TimetableEntry) = timetableDao.insertEntry(entry)
+
+    // User/Auth logic
+    suspend fun getUserByRegNumber(regNumber: String) = userDao.getUserByRegNumber(regNumber)
+    suspend fun registerUser(user: User) = userDao.insertUser(user)
+    suspend fun updateUser(user: User) = userDao.updateUser(user)
 }

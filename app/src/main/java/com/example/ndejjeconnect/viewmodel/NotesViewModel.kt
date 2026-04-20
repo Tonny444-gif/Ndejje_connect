@@ -27,9 +27,14 @@ class NotesViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
-    fun addNote(title: String, content: String, courseUnit: String) {
+    fun addNote(title: String, content: String, courseUnit: String, attachmentUri: String? = null) {
         viewModelScope.launch {
-            val newNote = Note(title = title, content = content, courseUnit = courseUnit)
+            val newNote = Note(
+                title = title,
+                content = content,
+                courseUnit = courseUnit,
+                attachmentUri = attachmentUri
+            )
             repository.insertNote(newNote)
         }
     }

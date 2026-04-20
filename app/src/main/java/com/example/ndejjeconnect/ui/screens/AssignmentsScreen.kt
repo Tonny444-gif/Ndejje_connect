@@ -13,18 +13,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ndejjeconnect.data.local.Assignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.ndejjeconnect.viewmodel.AssignmentsViewModel
 
 /**
  * View Layer: Assignments Screen
  * Centralized task tracking for students.
  */
 @Composable
-fun AssignmentsScreen() {
-    // Mock data for initial blueprint
-    val mockAssignments = listOf(
-        Assignment(title = "Proposal Draft", description = "Submit the first draft of the project proposal.", dueDate = System.currentTimeMillis() + 86400000 * 5, priority = 1),
-        Assignment(title = "Database Design", description = "ER Diagram and Schema for the library system.", dueDate = System.currentTimeMillis() + 86400000 * 2, priority = 2)
-    )
+fun AssignmentsScreen(
+    viewModel: AssignmentsViewModel,
+    onEditAssignment: (Int) -> Unit
+) {
+    val assignments by viewModel.assignments.collectAsState()
 
     Scaffold(
         floatingActionButton = {
@@ -45,8 +47,12 @@ fun AssignmentsScreen() {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(mockAssignments) { assignment ->
-                    AssignmentCard(assignment)
+                items(assignments) { assignment ->
+                    AssignmentCard(
+                        assignment = assignment,
+                        onToggle = { viewModel.toggleAssignmentCompletion(assignment) },
+                        onEdit = { onEditAssignment(assignment.id) }
+                    )
                 }
             }
         }
@@ -54,7 +60,11 @@ fun AssignmentsScreen() {
 }
 
 @Composable
-fun AssignmentCard(assignment: Assignment) {
+fun AssignmentCard(
+    assignment: Assignment,
+    onToggle: () -> Unit,
+    onEdit: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -62,12 +72,19 @@ fun AssignmentCard(assignment: Assignment) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(checked = assignment.isCompleted, onCheckedChange = {})
+            Checkbox(
+                checked = assignment.isCompleted,
+                onCheckedChange = { onToggle() }
+            )
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
-                Text(text = assignment.title, fontWeight = FontWeight.Bold)
+                Text(
+                    text = assignment.title,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = if (assignment.isCompleted) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
+                )
                 Text(text = "Due: April 25", style = MaterialTheme.typography.bodySmall)
             }
-            TextButton(onClick = { /* Edit */ }) {
+            TextButton(onClick = onEdit) {
                 Text("Edit")
             }
         }
@@ -77,7 +94,14 @@ fun AssignmentCard(assignment: Assignment) {
 @Preview(showBackground = true)
 @Composable
 fun AssignmentsScreenPreview() {
+    val mockAssignments = listOf(
+        Assignment(title = "Assignment 1", description = "Desc", dueDate = 0L, priority = 1)
+    )
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        AssignmentsScreen()
+        Scaffold { padding ->
+            Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+                AssignmentCard(assignment = mockAssignments[0], onToggle = {}, onEdit = {})
+            }
+        }
     }
 }

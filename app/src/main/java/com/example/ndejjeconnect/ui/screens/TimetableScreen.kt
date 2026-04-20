@@ -10,45 +10,50 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ndejjeconnect.data.local.TimetableEntry
+import com.example.ndejjeconnect.viewmodel.TimetableViewModel
 
 /**
  * View Layer: Timetable Screen
  * Displays the lecture schedule with daily tabs.
+ * MVVM: Observes TimetableViewModel for schedule data.
  */
 @Composable
-fun TimetableScreen() {
-    val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    var selectedTab by remember { mutableIntStateOf(0) }
+fun TimetableScreen(viewModel: TimetableViewModel) {
+    val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+    val selectedDay by viewModel.selectedDay.collectAsState()
+    val entries by viewModel.timetableEntries.collectAsState()
+
+    val selectedTabIndex = days.indexOf(selectedDay).coerceAtLeast(0)
 
     Column(modifier = Modifier.fillMaxSize()) {
         ScrollableTabRow(
-            selectedTabIndex = selectedTab,
+            selectedTabIndex = selectedTabIndex,
             edgePadding = 16.dp,
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary
         ) {
-            days.forEachIndexed { index, day ->
+            days.forEach { day ->
                 Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(day) }
+                    selected = selectedDay == day,
+                    onClick = { viewModel.selectDay(day) },
+                    text = { Text(day.take(3)) } // Show "Mon", "Tue", etc.
                 )
             }
         }
 
-        // Mock data for the blueprint
-        val mockEntries = listOf(
-            TimetableEntry(courseName = "Mobile Programming", dayOfWeek = "Mon", startTime = "10:00 AM", endTime = "1:00 PM", venue = "Main Campus Lab"),
-            TimetableEntry(courseName = "Data Structures", dayOfWeek = "Mon", startTime = "2:00 PM", endTime = "4:00 PM", venue = "Room 4")
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(mockEntries) { entry ->
-                TimetableCard(entry)
+        if (entries.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Text(text = "No classes scheduled for $selectedDay", style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(entries) { entry ->
+                    TimetableCard(entry)
+                }
             }
         }
     }
@@ -72,6 +77,15 @@ fun TimetableCard(entry: TimetableEntry) {
 @Composable
 fun TimetableScreenPreview() {
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        TimetableScreen()
+        // Preview with dummy card
+        TimetableCard(
+            entry = TimetableEntry(
+                courseName = "Mobile Programming",
+                dayOfWeek = "Monday",
+                startTime = "10:00 AM",
+                endTime = "1:00 PM",
+                venue = "Main Lab"
+            )
+        )
     }
 }
