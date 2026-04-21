@@ -18,8 +18,8 @@ import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.AuthState
 
 /**
- * View Layer: Authentication (Login Screen)
- * Provides a simple interface for students to log in.
+ * LoginScreen is the "Check-in Desk" of the app.
+ * It manages the user's login status and decides when to move to the Dashboard.
  */
 @Composable
 fun LoginScreen(
@@ -27,15 +27,18 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+    // Watches the login status (Idle, Loading, Success, or Error)
     val authState by viewModel.authState.collectAsState()
 
+    // When the status changes to "Success", move the user to the next screen
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
             onLoginSuccess()
-            viewModel.resetState()
+            viewModel.resetState() // Clear the state so it's fresh for next time
         }
     }
 
+    // Show the actual UI elements (the form)
     LoginContent(
         authState = authState,
         onLogin = { reg, pass -> viewModel.login(reg, pass) },
@@ -43,15 +46,21 @@ fun LoginScreen(
     )
 }
 
+/**
+ * LoginContent defines what the user actually sees on their screen.
+ * It contains the text fields, buttons, and error messages.
+ */
 @Composable
 fun LoginContent(
     authState: AuthState,
     onLogin: (String, String) -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+    // Temporary memory to hold what the user types
     var regNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // Column stacks items vertically (top to bottom)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,18 +68,21 @@ fun LoginContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // App Title
         Text(
             text = stringResource(id = R.string.app_name),
             fontSize = dimensionResource(id = R.dimen.text_size_extra_large).value.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
+        // Subtitle
         Text(
             text = stringResource(id = R.string.student_portal),
             fontSize = dimensionResource(id = R.dimen.text_size_medium).value.sp,
             modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_extra_large))
         )
 
+        // Show an error message if the login fails
         if (authState is AuthState.Error) {
             Text(
                 text = authState.message,
@@ -79,6 +91,7 @@ fun LoginContent(
             )
         }
 
+        // Show a success message if they just finished signing up
         if (authState is AuthState.RegisterSuccess) {
             Text(
                 text = stringResource(id = R.string.registration_successful),
@@ -87,6 +100,7 @@ fun LoginContent(
             )
         }
 
+        // Registration Number Input Field
         OutlinedTextField(
             value = regNumber,
             onValueChange = { regNumber = it },
@@ -96,6 +110,7 @@ fun LoginContent(
         
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_medium)))
 
+        // Password Input Field (hides characters)
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -106,13 +121,15 @@ fun LoginContent(
 
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_extra_large)))
 
+        // Login Button
         Button(
             onClick = { onLogin(regNumber, password) },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.medium,
-            enabled = authState !is AuthState.Loading
+            enabled = authState !is AuthState.Loading // Disable button while loading
         ) {
             if (authState is AuthState.Loading) {
+                // Show a spinning wheel while the app checks credentials
                 CircularProgressIndicator(
                     modifier = Modifier.size(dimensionResource(id = R.dimen.progress_indicator_size)),
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -126,6 +143,7 @@ fun LoginContent(
             }
         }
 
+        // Signup link for new users
         TextButton(onClick = onNavigateToRegister) {
             Text(stringResource(id = R.string.no_account_signup))
         }

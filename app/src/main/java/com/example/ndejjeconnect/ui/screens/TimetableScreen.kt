@@ -18,35 +18,40 @@ import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.TimetableViewModel
 
 /**
- * View Layer: Timetable Screen
- * Displays the lecture schedule with daily tabs.
- * MVVM: Observes TimetableViewModel for schedule data.
+ * TimetableScreen is the student's "Weekly Planner".
+ * It shows which classes are happening on each day and allows adding new ones.
  */
 @Composable
 fun TimetableScreen(viewModel: TimetableViewModel, authViewModel: AuthViewModel) {
+    // 1. DATA AND STATE
     val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
     val selectedDay by viewModel.selectedDay.collectAsState()
     val entries by viewModel.timetableEntries.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
     val availableUnits by viewModel.availableUnits.collectAsState()
 
+    // Controls if the "Add Class" popup is visible
     var showAddDialog by remember { mutableStateOf(false) }
 
+    // Tell the timetable who the user is so it can suggest the right Course Units
     LaunchedEffect(currentUser) {
         viewModel.setUser(currentUser)
-        viewModel.seedData() // Ensure basic units are in DB for demo
     }
 
+    // Figure out which day tab should be highlighted
     val selectedTabIndex = days.indexOf(selectedDay).coerceAtLeast(0)
 
     Scaffold(
         floatingActionButton = {
+            // Floating "+" button to add a new class
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Class")
             }
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            
+            // DAY TABS: Clickable labels for Mon, Tue, Wed, etc.
             ScrollableTabRow(
                 selectedTabIndex = selectedTabIndex,
                 edgePadding = 16.dp,
@@ -57,12 +62,14 @@ fun TimetableScreen(viewModel: TimetableViewModel, authViewModel: AuthViewModel)
                     Tab(
                         selected = selectedDay == day,
                         onClick = { viewModel.selectDay(day) },
-                        text = { Text(day.take(3)) } // Show "Mon", "Tue", etc.
+                        text = { Text(day.take(3)) } // Shows shortened name like "Mon"
                     )
                 }
             }
 
+            // SCHEDULE LIST: Shows the actual classes for the chosen day
             if (entries.isEmpty()) {
+                // Show a message if there are no classes for this day
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = "No classes scheduled for $selectedDay", style = MaterialTheme.typography.bodyLarge)
                 }
@@ -72,6 +79,7 @@ fun TimetableScreen(viewModel: TimetableViewModel, authViewModel: AuthViewModel)
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Create a card for every class entry in the database
                     items(entries) { entry ->
                         TimetableCard(entry, onDelete = { viewModel.removeEntry(entry.id) })
                     }
@@ -80,6 +88,7 @@ fun TimetableScreen(viewModel: TimetableViewModel, authViewModel: AuthViewModel)
         }
     }
 
+    // THE ADD CLASS POPUP
     if (showAddDialog) {
         AddTimetableEntryDialog(
             availableUnits = availableUnits,
@@ -93,6 +102,9 @@ fun TimetableScreen(viewModel: TimetableViewModel, authViewModel: AuthViewModel)
     }
 }
 
+/**
+ * AddTimetableEntryDialog is the form that pops up to add a new class.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTimetableEntryDialog(
@@ -112,6 +124,7 @@ fun AddTimetableEntryDialog(
         title = { Text("Add Class to $selectedDay") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // DROPDOWN: Shows Course Units based on the student's course
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
@@ -140,6 +153,7 @@ fun AddTimetableEntryDialog(
                     }
                 }
 
+                // Input boxes for Time and Venue
                 OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("Start Time") })
                 OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("End Time") })
                 OutlinedTextField(value = venue, onValueChange = { venue = it }, label = { Text("Venue") })
@@ -156,6 +170,9 @@ fun AddTimetableEntryDialog(
     )
 }
 
+/**
+ * TimetableCard displays a single class's details (Name, Time, Room).
+ */
 @Composable
 fun TimetableCard(entry: TimetableEntry, onDelete: () -> Unit) {
     Card(
@@ -171,6 +188,7 @@ fun TimetableCard(entry: TimetableEntry, onDelete: () -> Unit) {
                 Text(text = "${entry.startTime} - ${entry.endTime}", style = MaterialTheme.typography.bodyMedium)
                 Text(text = "Venue: ${entry.venue}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
             }
+            // Bin button to delete the class
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
             }
@@ -182,7 +200,6 @@ fun TimetableCard(entry: TimetableEntry, onDelete: () -> Unit) {
 @Composable
 fun TimetableScreenPreview() {
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        // Preview with dummy card
         TimetableCard(
             entry = TimetableEntry(
                 courseName = "Mobile Programming",

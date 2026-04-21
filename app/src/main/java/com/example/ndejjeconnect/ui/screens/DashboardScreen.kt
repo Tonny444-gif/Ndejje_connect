@@ -9,6 +9,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,10 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ndejjeconnect.R
-import com.example.ndejjeconnect.data.local.Assignment
-import com.example.ndejjeconnect.data.local.TimetableEntry
+import com.example.ndejjeconnect.data.local.*
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.DashboardViewModel
 
@@ -46,6 +47,8 @@ fun DashboardScreen(
     val nextAssignment by dashboardViewModel.nextAssignment.collectAsState()
     val pendingCount by dashboardViewModel.pendingAssignmentsCount.collectAsState()
     val gpa by dashboardViewModel.userGpa.collectAsState()
+    val financeRecord by dashboardViewModel.financeRecord.collectAsState()
+    val feedItems by dashboardViewModel.feedItems.collectAsState()
 
     LaunchedEffect(currentUser) {
         dashboardViewModel.setUser(currentUser)
@@ -59,11 +62,15 @@ fun DashboardScreen(
         nextAssignment = nextAssignment,
         pendingCount = pendingCount,
         userGpa = gpa,
+        financeRecord = financeRecord,
+        feedItems = feedItems,
         onNavigateToTimetable = onNavigateToTimetable,
         onNavigateToAssignments = onNavigateToAssignments,
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToResults = onNavigateToResults,
-        onNavigateToFinance = onNavigateToFinance
+        onNavigateToFinance = onNavigateToFinance,
+        onAddHighlight = { content -> dashboardViewModel.addHighlight(content) },
+        onRemoveFeedItem = { item -> dashboardViewModel.removeFeedItem(item) }
     )
 }
 
@@ -76,12 +83,46 @@ fun DashboardContent(
     nextAssignment: Assignment?,
     pendingCount: Int,
     userGpa: Double,
+    financeRecord: FinanceRecord?,
+    feedItems: List<FeedItem>,
     onNavigateToTimetable: () -> Unit,
     onNavigateToAssignments: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToResults: () -> Unit,
-    onNavigateToFinance: () -> Unit
+    onNavigateToFinance: () -> Unit,
+    onAddHighlight: (String) -> Unit,
+    onRemoveFeedItem: (FeedItem) -> Unit
 ) {
+    var showAddDialog by remember { mutableStateOf(false) }
+    var highlightText by remember { mutableStateOf("") }
+
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = { Text("Add Highlight") },
+            text = {
+                OutlinedTextField(
+                    value = highlightText,
+                    onValueChange = { highlightText = it },
+                    label = { Text("What's happening?") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (highlightText.isNotBlank()) {
+                        onAddHighlight(highlightText)
+                        highlightText = ""
+                        showAddDialog = false
+                    }
+                }) { Text("Post") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -89,7 +130,6 @@ fun DashboardContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // 1. Top Branding & Profile Section
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -112,7 +152,7 @@ fun DashboardContent(
                 
                 Box(
                     modifier = Modifier
-                        .size(45.dp) // Slightly larger avatar
+                        .size(45.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .clickable { onNavigateToProfile() },
@@ -147,48 +187,49 @@ fun DashboardContent(
             }
         }
 
-        // 2. Bento Box Style Widgets
         item {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Next Up Card (Large)
                 BentoCard(
                     modifier = Modifier.weight(1.5f).height(160.dp),
                     title = "Next Up",
-                    content = if (nextClass != null) nextClass.courseName else "No more classes",
+                    content = nextClass?.courseName ?: "No more classes",
                     subtitle = if (nextClass != null) "${nextClass.startTime} • ${nextClass.venue}" else "Free time!",
-                    icon = Icons.Default.MenuBook,
+                    icon = Icons.AutoMirrored.Filled.MenuBook,
                     gradient = Brush.verticalGradient(listOf(Color(0xFF1A237E), Color(0xFF3949AB))),
                     onClick = onNavigateToTimetable
                 )
                 
-                // Tasks Card (Small)
                 BentoCard(
                     modifier = Modifier.weight(1f).height(160.dp),
                     title = "Tasks",
                     content = "$pendingCount",
                     subtitle = "Pending",
-                    icon = Icons.Default.Assignment,
+                    icon = Icons.AutoMirrored.Filled.Assignment,
                     gradient = Brush.verticalGradient(listOf(Color(0xFF004D40), Color(0xFF00897B))),
                     onClick = onNavigateToAssignments
                 )
             }
         }
 
-        // 3. Quick Actions Row
         item {
             Text(text = "Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 QuickActionButton(Icons.Default.BarChart, "Results", onClick = onNavigateToResults)
-                QuickActionButton(Icons.Default.LibraryBooks, "Library", onClick = {})
+                QuickActionButton(Icons.AutoMirrored.Filled.LibraryBooks, "Library", onClick = {})
+                QuickActionButton(Icons.Default.Payment, "Finance", onClick = onNavigateToFinance)
             }
         }
 
-        // 4. Financial Status Widget
         item {
+            val total = financeRecord?.totalFees ?: 0.0
+            val paid = financeRecord?.amountPaid ?: 0.0
+            val progress = if (total > 0) (paid / total).toFloat() else 0f
+            val balance = (total - paid).coerceAtLeast(0.0)
+
             Card(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -199,43 +240,39 @@ fun DashboardContent(
                     Text(text = "Financial Status", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = { 0.75f },
+                        progress = { progress },
                         modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Tuition Paid: 75%", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Balance: 1.2M UGX", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                        Text(text = "Paid: ${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+                        Text(text = "Bal: ${balance.toLong()} UGX", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
         }
 
-        // 5. Campus Feed (Vertical)
         item {
-            Text(text = "Campus Feed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Campus Feed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Highlight")
+                }
+            }
         }
 
-        val newsItems = listOf(
-            "Library closing at 5 PM today",
-            "End of Semester Exams start June 10th",
-            "Guild elections tomorrow at Main Campus",
-            "Inter-Faculty Sports Gala: Registration Open",
-            "New E-Resources added to Digital Library",
-            "Career Fair: Meet top employers on Friday",
-            "Main Hall renovation completed",
-            "Scholarship applications for next intake open",
-            "Health Awareness Week starting Monday",
-            "Coding Bootcamp: Learn Kotlin & Compose",
-            "Art Exhibition: Creative Arts Department",
-            "Guest Lecture: Tech Innovation in Africa",
-            "Lost & Found: Keys found near Cafeteria"
-        )
-
-        items(newsItems) { news ->
-            NewsCard(news, modifier = Modifier.fillMaxWidth())
+        items(feedItems) { item ->
+            NewsCard(
+                item = item,
+                modifier = Modifier.fillMaxWidth(),
+                onDelete = { onRemoveFeedItem(item) }
+            )
         }
     }
 }
@@ -290,18 +327,25 @@ fun QuickActionButton(icon: ImageVector, label: String, onClick: () -> Unit = {}
 }
 
 @Composable
-fun NewsCard(text: String, modifier: Modifier = Modifier) {
+fun NewsCard(item: FeedItem, modifier: Modifier = Modifier, onDelete: () -> Unit) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Text(
-            text = text,
+        Row(
             modifier = Modifier.padding(12.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 2
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = item.content,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(16.dp))
+            }
+        }
     }
 }
 
@@ -317,11 +361,15 @@ fun DashboardScreenPreview() {
             nextAssignment = null,
             pendingCount = 3,
             userGpa = 3.8,
+            financeRecord = null,
+            feedItems = emptyList(),
             onNavigateToTimetable = {},
             onNavigateToAssignments = {},
             onNavigateToProfile = {},
             onNavigateToResults = {},
-            onNavigateToFinance = {}
+            onNavigateToFinance = {},
+            onAddHighlight = {},
+            onRemoveFeedItem = {}
         )
     }
 }

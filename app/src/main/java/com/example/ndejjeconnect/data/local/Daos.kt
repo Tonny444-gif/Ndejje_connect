@@ -54,3 +54,25 @@ interface UserDao {
     @Update
     suspend fun updateUser(user: User)
 }
+
+@Dao
+interface FinanceDao {
+    @Query("SELECT * FROM finance WHERE regNumber = :regNumber")
+    fun getFinanceForUser(regNumber: String): Flow<FinanceRecord?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFinance(finance: FinanceRecord)
+}
+
+@Dao
+interface FeedDao {
+    @Query("SELECT * FROM feed_items ORDER BY timestamp DESC")
+    fun getAllFeedItems(): Flow<List<FeedItem>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFeedItem(item: FeedItem)
+
+    @Delete
+    suspend fun deleteFeedItem(item: FeedItem)
+}
+

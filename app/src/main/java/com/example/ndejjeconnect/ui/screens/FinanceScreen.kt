@@ -1,6 +1,5 @@
 package com.example.ndejjeconnect.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,14 +17,39 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.ndejjeconnect.data.local.FinanceRecord
+import com.example.ndejjeconnect.viewmodel.AuthViewModel
+import com.example.ndejjeconnect.viewmodel.DashboardViewModel
 
+/**
+ * FinanceScreen is the student's "Pocket Tracker".
+ * It helps them keep track of school fees: what's total, what's paid, and what's left.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FinanceScreen(onNavigateBack: () -> Unit) {
-    var totalFees by remember { mutableStateOf("2500000") }
-    var paidFees by remember { mutableStateOf("1500000") }
+fun FinanceScreen(
+    authViewModel: AuthViewModel,
+    dashboardViewModel: DashboardViewModel,
+    onNavigateBack: () -> Unit
+) {
+    // 1. GETTING DATA
+    // Connect to the "Brains" to get current user and their money records
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val financeRecord by dashboardViewModel.financeRecord.collectAsState()
 
+    // 2. FORM STATE: Temporary memory for the input boxes
+    var totalFees by remember { mutableStateOf("") }
+    var paidFees by remember { mutableStateOf("") }
+
+    // When the screen opens, pre-fill the boxes with data already saved in the database
+    LaunchedEffect(financeRecord) {
+        financeRecord?.let {
+            totalFees = it.totalFees.toLong().toString()
+            paidFees = it.amountPaid.toLong().toString()
+        }
+    }
+
+    // 3. CALCULATIONS: Doing the math for progress and balance
     val total = totalFees.toDoubleOrNull() ?: 0.0
     val paid = paidFees.toDoubleOrNull() ?: 0.0
     val progress = if (total > 0) (paid / total).coerceIn(0.0, 1.0).toFloat() else 0f
@@ -32,6 +57,7 @@ fun FinanceScreen(onNavigateBack: () -> Unit) {
 
     Scaffold(
         topBar = {
+            // Header bar with a back button
             TopAppBar(
                 title = { Text("Financial Status") },
                 navigationIcon = {
@@ -45,8 +71,23 @@ fun FinanceScreen(onNavigateBack: () -> Unit) {
                     navigationIconContentColor = Color.White
                 )
             )
+        },
+        floatingActionButton = {
+            // The "Save" button that floats at the bottom right
+            ExtendedFloatingActionButton(
+                onClick = {
+                    currentUser?.let {
+                        dashboardViewModel.updateFinance(
+                            FinanceRecord(it.regNumber, total, paid)
+                        )
+                    }
+                },
+                icon = { Icon(Icons.Default.Save, contentDescription = null) },
+                text = { Text("Save Status") }
+            )
         }
     ) { padding ->
+        // The main scrollable content area
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,6 +102,7 @@ fun FinanceScreen(onNavigateBack: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
 
+            // INPUT SECTION: Where the student types in their fees info
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -84,6 +126,7 @@ fun FinanceScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
+            // VISUAL SUMMARY: A circle chart showing how much is paid
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -109,6 +152,7 @@ fun FinanceScreen(onNavigateBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // PAID vs BALANCE numbers
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -125,31 +169,26 @@ fun FinanceScreen(onNavigateBack: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(16.dp))
                     
+                    // A linear progress bar as an alternative view
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                     )
                 }
             }
-
-            // Additional Info
-            Text(
-                text = "Important Notes",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
             
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                BulletPoint("Ensure you clear 100% of the fees to sit for exams.")
-                BulletPoint("Registration is only complete after 50% payment.")
-                BulletPoint("Library access requires at least 30% payment.")
-            }
+            // Helpful school tips at the bottom
+            FinanceBulletPoint("Ensure you clear 100% of the fees to sit for exams.")
+            FinanceBulletPoint("Registration is only complete after 50% payment.")
         }
     }
 }
 
+/**
+ * A small reusable component for showing a bullet point tip.
+ */
 @Composable
-fun BulletPoint(text: String) {
+fun FinanceBulletPoint(text: String) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Text("• ", fontWeight = FontWeight.Bold)
         Text(text, style = MaterialTheme.typography.bodyMedium)

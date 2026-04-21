@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,22 +20,30 @@ import androidx.compose.ui.unit.sp
 import com.example.ndejjeconnect.data.Academia
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 
+/**
+ * ResultsScreen is the "Report Card" of the app.
+ * It automatically looks up the units for a student's course and shows their grades.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultsScreen(
     viewModel: AuthViewModel,
     onNavigateBack: () -> Unit
 ) {
+    // 1. GETTING THE STUDENT'S INFO
     val user by viewModel.currentUser.collectAsState()
     
-    // Find faculty by searching through Academia structure for the user's course
+    // 2. FETCHING ACADEMIC DATA
+    // The app looks through its "School Registry" (Academia.kt) to find which Faculty the student belongs to
     val faculty = Academia.academicStructure.entries.find { facultyEntry ->
         facultyEntry.value[user?.level]?.containsKey(user?.course) == true
     }?.key
 
+    // Get the list of units (subjects) for this specific student
     val units = Academia.getUnits(faculty, user?.level, user?.course)
     
-    // Generate demo grades based on the course units
+    // 3. GENERATING RESULTS
+    // For this demo, we create some random scores for the student's units
     val demoResults = units.map { unit ->
         val score = (70..95).random()
         val grade = when {
@@ -50,6 +57,7 @@ fun ResultsScreen(
 
     Scaffold(
         topBar = {
+            // Screen Header
             TopAppBar(
                 title = { Text("Academic Results") },
                 navigationIcon = {
@@ -69,9 +77,9 @@ fun ResultsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF5F5F5))
+                .background(Color(0xFFF5F5F5)) // Light gray background
         ) {
-            // User Header Info
+            // STUDENT HEADER: Shows Name, Reg Number, and Course
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -100,7 +108,9 @@ fun ResultsScreen(
                 }
             }
 
+            // LIST OF GRADES
             if (demoResults.isEmpty()) {
+                // If no units were found
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No results available for your course yet.")
                 }
@@ -110,10 +120,12 @@ fun ResultsScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Show a card for each subject/unit
                     items(demoResults) { result ->
                         ResultCard(result)
                     }
                     
+                    // Show the final GPA summary at the bottom
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                         GPASection(demoResults)
@@ -124,6 +136,9 @@ fun ResultsScreen(
     }
 }
 
+/**
+ * ResultCard displays a single subject's name, score, and letter grade.
+ */
 @Composable
 fun ResultCard(result: ResultItem) {
     Card(
@@ -151,6 +166,7 @@ fun ResultCard(result: ResultItem) {
                 )
             }
             
+            // Colored box for the Grade (Green for A, Light Green for B, etc.)
             Surface(
                 color = when(result.grade) {
                     "A" -> Color(0xFF4CAF50)
@@ -175,10 +191,14 @@ fun ResultCard(result: ResultItem) {
     }
 }
 
+/**
+ * GPASection calculates and displays the final grade average for the semester.
+ */
 @Composable
 fun GPASection(results: List<ResultItem>) {
+    // Simple math to get the average
     val average = results.map { it.score }.average()
-    val cgpa = (average / 100 * 5.0) // Simple conversion for demo
+    val cgpa = (average / 100 * 5.0) // Convert percentage to a 5.0 scale
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -204,6 +224,9 @@ fun GPASection(results: List<ResultItem>) {
     }
 }
 
+/**
+ * ResultItem is a small data holder for a single subject's score info.
+ */
 data class ResultItem(
     val unitName: String,
     val score: Int,

@@ -1,25 +1,19 @@
 package com.example.ndejjeconnect.data
 
-import com.example.ndejjeconnect.data.local.Assignment
-import com.example.ndejjeconnect.data.local.AssignmentDao
-import com.example.ndejjeconnect.data.local.Note
-import com.example.ndejjeconnect.data.local.NoteDao
-import com.example.ndejjeconnect.data.local.TimetableDao
-import com.example.ndejjeconnect.data.local.TimetableEntry
-import com.example.ndejjeconnect.data.local.User
-import com.example.ndejjeconnect.data.local.UserDao
+import com.example.ndejjeconnect.data.local.*
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository Layer: Acts as a single source of truth for all data.
  * Clean Architecture: abstracts data sources from the ViewModels.
- * Refactored: Course metadata is now handled by Academia.kt
  */
 class MainRepository(
     private val noteDao: NoteDao,
     private val assignmentDao: AssignmentDao,
     private val timetableDao: TimetableDao,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val financeDao: FinanceDao,
+    private val feedDao: FeedDao
 ) {
     // Notes logic
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
@@ -40,4 +34,13 @@ class MainRepository(
     suspend fun getUserByRegNumber(regNumber: String) = userDao.getUserByRegNumber(regNumber)
     suspend fun registerUser(user: User) = userDao.insertUser(user)
     suspend fun updateUser(user: User) = userDao.updateUser(user)
+
+    // Finance logic
+    fun getFinanceForUser(regNumber: String): Flow<FinanceRecord?> = financeDao.getFinanceForUser(regNumber)
+    suspend fun updateFinance(finance: FinanceRecord) = financeDao.insertFinance(finance)
+
+    // Feed logic
+    val allFeedItems: Flow<List<FeedItem>> = feedDao.getAllFeedItems()
+    suspend fun insertFeedItem(item: FeedItem) = feedDao.insertFeedItem(item)
+    suspend fun deleteFeedItem(item: FeedItem) = feedDao.deleteFeedItem(item)
 }

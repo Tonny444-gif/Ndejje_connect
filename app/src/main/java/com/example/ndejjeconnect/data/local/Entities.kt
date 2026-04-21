@@ -47,15 +47,35 @@ data class TimetableEntry(
 
 
 /**
- * Represents a User/Student in the system.
- * Model Layer: Handles authentication and profile details.
+ * Represents a Registered User.
  */
 @Entity(tableName = "users")
 data class User(
-    @PrimaryKey val regNumber: String, // Unique identifier (Registration Number)
+    @PrimaryKey val regNumber: String,
     val name: String,
     val password: String,
-    val level: String, // Added for filtering
-    val course: String, // Added for filtering
+    val level: String,
+    val course: String,
     val profileImageUri: String? = null
 )
+
+/**
+ * Represents Financial status for a user.
+ */
+@Entity(tableName = "finance")
+data class FinanceRecord(
+    @PrimaryKey val regNumber: String,
+    val totalFees: Double,
+    val amountPaid: Double
+)
+
+/**
+ * Represents a highlight in the Campus Feed.
+ */
+@Entity(tableName = "feed_items")
+data class FeedItem(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val content: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+

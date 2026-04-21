@@ -6,10 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,7 +47,9 @@ class MainActivity : ComponentActivity() {
                 database.noteDao(),
                 database.assignmentDao(),
                 database.timetableDao(),
-                database.userDao()
+                database.userDao(),
+                database.financeDao(),
+                database.feedDao()
             )
         }
         // ViewModel Factory for dependency injection
@@ -93,7 +95,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 NavigationBarItem(
-                                    icon = { Icon(Icons.Default.Assignment, contentDescription = "Assignments") },
+                                    icon = { Icon(Icons.AutoMirrored.Filled.Assignment, contentDescription = "Assignments") },
                                     label = { Text("Tasks") },
                                     selected = currentRoute == Screen.Assignments.route,
                                     onClick = { 
@@ -104,7 +106,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 NavigationBarItem(
-                                    icon = { Icon(Icons.Default.Notes, contentDescription = "Notes") },
+                                    icon = { Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = "Notes") },
                                     label = { Text("Notes") },
                                     selected = currentRoute == Screen.Notes.route,
                                     onClick = { 
@@ -153,7 +155,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = authViewModel,
                                 onRegisterSuccess = {
                                     // This callback is triggered when registration is successful.
-                                    // The logic in RegisterScreen now navigates to login.
+                                    // The logic in RegisterScreen now navigates to log in.
                                 },
                                 onNavigateToLogin = {
                                     navController.popBackStack()
@@ -179,7 +181,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.Finance.route) {
+                            val dashboardViewModel: DashboardViewModel = viewModel(factory = factory)
                             FinanceScreen(
+                                authViewModel = authViewModel,
+                                dashboardViewModel = dashboardViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
