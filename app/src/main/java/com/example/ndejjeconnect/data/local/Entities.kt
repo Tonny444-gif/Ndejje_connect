@@ -26,6 +26,7 @@ data class Assignment(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
     val description: String,
+    val courseUnit: String,
     val dueDate: Long,
     val priority: Int, // 1: High, 2: Medium, 3: Low
     val isCompleted: Boolean = false

@@ -28,6 +28,7 @@ import com.example.ndejjeconnect.viewmodel.NotesViewModel
 @Composable
 fun NotesScreen(viewModel: NotesViewModel) {
     val notes by viewModel.notes.collectAsState()
+    val availableCourses by viewModel.availableCourses.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
     NotesContent(
@@ -37,6 +38,7 @@ fun NotesScreen(viewModel: NotesViewModel) {
 
     if (showAddDialog) {
         AddNoteDialog(
+            availableCourses = availableCourses,
             onDismiss = { showAddDialog = false },
             onSave = { title, content, course, uri ->
                 viewModel.addNote(title, content, course, uri)
@@ -49,15 +51,18 @@ fun NotesScreen(viewModel: NotesViewModel) {
 /**
  * Dialog for adding a new note with optional attachment.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNoteDialog(
+    availableCourses: List<String>,
     onDismiss: () -> Unit,
     onSave: (String, String, String, String?) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
-    var courseUnit by remember { mutableStateOf("") }
+    var courseUnit by remember { mutableStateOf(availableCourses.firstOrNull() ?: "") }
     var attachmentUri by remember { mutableStateOf<String?>(null) }
+    var expanded by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -70,13 +75,46 @@ fun AddNoteDialog(
         title = { Text("New Course Note") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") })
-                OutlinedTextField(value = courseUnit, onValueChange = { courseUnit = it }, label = { Text("Course Unit") })
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = courseUnit,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Course Unit") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        availableCourses.forEach { selectionOption ->
+                            DropdownMenuItem(
+                                text = { Text(selectionOption) },
+                                onClick = {
+                                    courseUnit = selectionOption
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
                     label = { Text("Content") },
-                    modifier = Modifier.height(120.dp)
+                    modifier = Modifier.fillMaxWidth().height(120.dp)
                 )
                 
                 TextButton(onClick = { launcher.launch("*/*") }) {

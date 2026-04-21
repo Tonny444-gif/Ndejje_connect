@@ -35,6 +35,9 @@ interface TimetableDao {
     @Query("SELECT * FROM timetable WHERE dayOfWeek = :day")
     fun getTimetableForDay(day: String): Flow<List<TimetableEntry>>
 
+    @Query("SELECT DISTINCT courseName FROM timetable")
+    fun getAllCourseNames(): Flow<List<String>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: TimetableEntry)
 }

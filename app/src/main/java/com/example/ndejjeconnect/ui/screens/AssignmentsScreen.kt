@@ -95,7 +95,7 @@ fun AssignmentCard(
 @Composable
 fun AssignmentsScreenPreview() {
     val mockAssignments = listOf(
-        Assignment(title = "Assignment 1", description = "Desc", dueDate = 0L, priority = 1)
+        Assignment(title = "Assignment 1", description = "Desc", courseUnit = "CSC101", dueDate = 0L, priority = 1)
     )
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
         Scaffold { padding ->

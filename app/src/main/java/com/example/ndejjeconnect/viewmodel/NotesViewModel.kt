@@ -18,11 +18,24 @@ class NotesViewModel(private val repository: MainRepository) : ViewModel() {
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
     val notes: StateFlow<List<Note>> = _notes.asStateFlow()
 
+    private val _availableCourses = MutableStateFlow<List<String>>(emptyList())
+    val availableCourses: StateFlow<List<String>> = _availableCourses.asStateFlow()
+
     init {
         // Collect notes from the repository and update the UI state
         viewModelScope.launch {
             repository.allNotes.collect { itemList ->
                 _notes.value = itemList
+            }
+        }
+
+        viewModelScope.launch {
+            repository.getAllCourseNames().collect { courses ->
+                _availableCourses.value = if (courses.isEmpty()) {
+                    listOf("Mobile Programming", "Software Engineering", "UI/UX Design", "Database Systems")
+                } else {
+                    courses
+                }
             }
         }
     }

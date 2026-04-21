@@ -26,11 +26,12 @@ class AssignmentsViewModel(private val repository: MainRepository) : ViewModel()
         }
     }
 
-    fun addAssignment(title: String, description: String, dueDate: Long, priority: Int) {
+    fun addAssignment(title: String, description: String, courseUnit: String, dueDate: Long, priority: Int) {
         viewModelScope.launch {
             val newAssignment = Assignment(
                 title = title,
                 description = description,
+                courseUnit = courseUnit,
                 dueDate = dueDate,
                 priority = priority
             )

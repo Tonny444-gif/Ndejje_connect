@@ -32,6 +32,7 @@ class MainRepository(
 
     // Timetable logic
     fun getTimetableForDay(day: String): Flow<List<TimetableEntry>> = timetableDao.getTimetableForDay(day)
+    fun getAllCourseNames(): Flow<List<String>> = timetableDao.getAllCourseNames()
     suspend fun insertTimetableEntry(entry: TimetableEntry) = timetableDao.insertEntry(entry)
 
     // User/Auth logic
