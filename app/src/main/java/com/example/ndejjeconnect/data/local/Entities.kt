@@ -45,6 +45,7 @@ data class TimetableEntry(
     val venue: String
 )
 
+
 /**
  * Represents a User/Student in the system.
  * Model Layer: Handles authentication and profile details.
@@ -54,5 +55,7 @@ data class User(
     @PrimaryKey val regNumber: String, // Unique identifier (Registration Number)
     val name: String,
     val password: String,
+    val level: String, // Added for filtering
+    val course: String, // Added for filtering
     val profileImageUri: String? = null
 )

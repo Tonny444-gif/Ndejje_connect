@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Repository Layer: Acts as a single source of truth for all data.
  * Clean Architecture: abstracts data sources from the ViewModels.
+ * Refactored: Course metadata is now handled by Academia.kt
  */
 class MainRepository(
     private val noteDao: NoteDao,
@@ -33,6 +34,7 @@ class MainRepository(
     // Timetable logic
     fun getTimetableForDay(day: String): Flow<List<TimetableEntry>> = timetableDao.getTimetableForDay(day)
     suspend fun insertTimetableEntry(entry: TimetableEntry) = timetableDao.insertEntry(entry)
+    suspend fun deleteTimetableEntry(id: Int) = timetableDao.deleteEntry(id)
 
     // User/Auth logic
     suspend fun getUserByRegNumber(regNumber: String) = userDao.getUserByRegNumber(regNumber)

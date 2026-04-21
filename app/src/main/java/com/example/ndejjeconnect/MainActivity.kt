@@ -59,6 +59,9 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
+                // Shared AuthViewModel for session management
+                val authViewModel: AuthViewModel = viewModel(factory = factory)
+
                 Scaffold(
                     bottomBar = {
                         // View Logic: Only show bottom navigation if not on the login screen
@@ -70,7 +73,9 @@ class MainActivity : ComponentActivity() {
                                     selected = currentRoute == Screen.Dashboard.route,
                                     onClick = { 
                                         navController.navigate(Screen.Dashboard.route) {
-                                            popUpTo(Screen.Dashboard.route) { saveState = true }
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                saveState = true
+                                            }
                                             launchSingleTop = true
                                             restoreState = true
                                         }
@@ -112,9 +117,9 @@ class MainActivity : ComponentActivity() {
                                 NavigationBarItem(
                                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
                                     label = { Text("Profile") },
-                                    selected = currentRoute == "profile",
+                                    selected = currentRoute == Screen.Profile.route,
                                     onClick = {
-                                        navController.navigate("profile") {
+                                        navController.navigate(Screen.Profile.route) {
                                             launchSingleTop = true
                                             restoreState = true
                                         }
@@ -131,7 +136,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable(Screen.Login.route) {
-                            val authViewModel: AuthViewModel = viewModel(factory = factory)
                             LoginScreen(
                                 viewModel = authViewModel,
                                 onLoginSuccess = {
@@ -140,18 +144,16 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onNavigateToRegister = {
-                                    navController.navigate("register")
+                                    navController.navigate(Screen.Register.route)
                                 }
                             )
                         }
-                        composable("register") {
-                            val authViewModel: AuthViewModel = viewModel(factory = factory)
+                        composable(Screen.Register.route) {
                             RegisterScreen(
                                 viewModel = authViewModel,
                                 onRegisterSuccess = {
-                                    navController.navigate(Screen.Dashboard.route) {
-                                        popUpTo("register") { inclusive = true }
-                                    }
+                                    // This callback is triggered when registration is successful.
+                                    // The logic in RegisterScreen now navigates to login.
                                 },
                                 onNavigateToLogin = {
                                     navController.popBackStack()
@@ -159,18 +161,31 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Screen.Dashboard.route) {
-                            val authViewModel: AuthViewModel = viewModel(factory = factory)
                             val dashboardViewModel: DashboardViewModel = viewModel(factory = factory)
                             DashboardScreen(
                                 authViewModel = authViewModel,
                                 dashboardViewModel = dashboardViewModel,
                                 onNavigateToTimetable = { navController.navigate(Screen.Timetable.route) },
-                                onNavigateToAssignments = { navController.navigate(Screen.Assignments.route) }
+                                onNavigateToAssignments = { navController.navigate(Screen.Assignments.route) },
+                                onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                                onNavigateToResults = { navController.navigate(Screen.Results.route) },
+                                onNavigateToFinance = { navController.navigate(Screen.Finance.route) }
+                            )
+                        }
+                        composable(Screen.Results.route) {
+                            ResultsScreen(
+                                viewModel = authViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable(Screen.Finance.route) {
+                            FinanceScreen(
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable(Screen.Timetable.route) {
                             val timetableViewModel: TimetableViewModel = viewModel(factory = factory)
-                            TimetableScreen(viewModel = timetableViewModel)
+                              TimetableScreen(viewModel = timetableViewModel, authViewModel = authViewModel)
                         }
                         composable(Screen.Assignments.route) {
                             val assignmentsViewModel: AssignmentsViewModel = viewModel(factory = factory)
@@ -197,8 +212,7 @@ class MainActivity : ComponentActivity() {
                             val notesViewModel: NotesViewModel = viewModel(factory = factory)
                             NotesScreen(viewModel = notesViewModel)
                         }
-                        composable("profile") {
-                            val authViewModel: AuthViewModel = viewModel(factory = factory)
+                        composable(Screen.Profile.route) {
                             ProfileScreen(
                                 viewModel = authViewModel,
                                 onLogout = {

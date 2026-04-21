@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,16 +22,17 @@ import com.example.ndejjeconnect.viewmodel.NotesViewModel
 /**
  * View Layer: Notes Screen
  * Central repository for course notes.
- * Media-Ready: Includes functionality to attach system files/images.
  */
 @Composable
 fun NotesScreen(viewModel: NotesViewModel) {
     val notes by viewModel.notes.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var selectedNote by remember { mutableStateOf<Note?>(null) }
 
     NotesContent(
         notes = notes,
-        onAddClick = { showAddDialog = true }
+        onAddClick = { showAddDialog = true },
+        onNoteClick = { selectedNote = it }
     )
 
     if (showAddDialog) {
@@ -44,11 +44,63 @@ fun NotesScreen(viewModel: NotesViewModel) {
             }
         )
     }
+
+    if (selectedNote != null) {
+        ViewNoteDialog(
+            note = selectedNote!!,
+            onDismiss = { selectedNote = null },
+            onDelete = {
+                viewModel.deleteNote(selectedNote!!)
+                selectedNote = null
+            }
+        )
+    }
 }
 
-/**
- * Dialog for adding a new note with optional attachment.
- */
+@Composable
+fun ViewNoteDialog(
+    note: Note,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(note.title, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Course: ${note.courseUnit}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                HorizontalDivider()
+                Text(
+                    text = note.content,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (note.attachmentUri != null) {
+                    Text(
+                        text = "Attachment available",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDelete,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Delete")
+            }
+        }
+    )
+}
+
 @Composable
 fun AddNoteDialog(
     onDismiss: () -> Unit,
@@ -70,13 +122,23 @@ fun AddNoteDialog(
         title = { Text("New Course Note") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") })
-                OutlinedTextField(value = courseUnit, onValueChange = { courseUnit = it }, label = { Text("Course Unit") })
+                OutlinedTextField(
+                    value = title, 
+                    onValueChange = { title = it }, 
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = courseUnit, 
+                    onValueChange = { courseUnit = it }, 
+                    label = { Text("Course Unit") },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
                     label = { Text("Content") },
-                    modifier = Modifier.height(120.dp)
+                    modifier = Modifier.fillMaxWidth().height(120.dp)
                 )
                 
                 TextButton(onClick = { launcher.launch("*/*") }) {
@@ -100,13 +162,11 @@ fun AddNoteDialog(
     )
 }
 
-/**
- * Stateless UI for the Notes Screen.
- */
 @Composable
 fun NotesContent(
     notes: List<Note>,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onNoteClick: (Note) -> Unit
 ) {
     Scaffold(
         floatingActionButton = {
@@ -123,15 +183,21 @@ fun NotesContent(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalItemSpacing = 8.dp
-            ) {
-                items(notes) { note ->
-                    NoteCard(note)
+            if (notes.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Text("No notes found. Create one!")
+                }
+            } else {
+                LazyVerticalStaggeredGrid(
+                    columns = StaggeredGridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalItemSpacing = 8.dp
+                ) {
+                    items(notes) { note ->
+                        NoteCard(note, onClick = { onNoteClick(note) })
+                    }
                 }
             }
         }
@@ -139,8 +205,9 @@ fun NotesContent(
 }
 
 @Composable
-fun NoteCard(note: Note) {
+fun NoteCard(note: Note, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -171,12 +238,7 @@ fun NoteCard(note: Note) {
 @Preview(showBackground = true)
 @Composable
 fun NotesScreenPreview() {
-    val mockNotes = listOf(
-        Note(title = "Room Intro", content = "Room is a persistence library...", courseUnit = "Mobile Dev"),
-        Note(title = "MVVM Basics", content = "Model-View-ViewModel structure...", courseUnit = "Soft Eng"),
-        Note(title = "Compose Layouts", content = "Rows, Columns, and Boxes...", courseUnit = "UI Design")
-    )
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        NotesContent(notes = mockNotes, onAddClick = {})
+        NotesContent(notes = emptyList(), onAddClick = {}, onNoteClick = {})
     }
 }

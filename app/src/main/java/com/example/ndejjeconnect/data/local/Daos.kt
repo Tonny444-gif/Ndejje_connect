@@ -37,7 +37,11 @@ interface TimetableDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: TimetableEntry)
+
+    @Query("DELETE FROM timetable WHERE id = :id")
+    suspend fun deleteEntry(id: Int)
 }
+
 
 @Dao
 interface UserDao {

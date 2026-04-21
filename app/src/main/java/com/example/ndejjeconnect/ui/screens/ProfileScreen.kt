@@ -9,10 +9,9 @@ import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +35,7 @@ fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -53,17 +53,11 @@ fun ProfileScreen(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Section 2: Action List (Settings, Edit, Logout)
-        ProfileMenuItem(
-            icon = Icons.Default.Brightness4,
-            label = "Settings: Dark/Light Mode",
-            onClick = { /* Toggle Theme Logic */ }
-        )
-
+        // Section 2: Action List (Edit, Logout)
         ProfileMenuItem(
             icon = Icons.Default.Edit,
             label = "Edit Profile Details",
-            onClick = onNavigateToEditProfile
+            onClick = { showEditDialog = true }
         )
 
         ProfileMenuItem(
@@ -76,6 +70,49 @@ fun ProfileScreen(
             }
         )
     }
+
+    if (showEditDialog && currentUser != null) {
+        EditProfileDialog(
+            currentName = currentUser?.name ?: "",
+            onDismiss = { showEditDialog = false },
+            onSave = { newName ->
+                viewModel.updateProfile(newName, currentUser?.profileImageUri)
+                showEditDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun EditProfileDialog(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Profile") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSave(name) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
 
 /**

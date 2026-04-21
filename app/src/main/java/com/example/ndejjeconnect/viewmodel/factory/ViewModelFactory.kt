@@ -27,6 +27,10 @@ class ViewModelFactory(private val repository: MainRepository) : ViewModelProvid
                 @Suppress("UNCHECKED_CAST")
                 DashboardViewModel(repository) as T
             }
+            modelClass.isAssignableFrom(TimetableViewModel::class.java) -> {
+                @Suppress("UNCHECKED_CAST")
+                TimetableViewModel(repository) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

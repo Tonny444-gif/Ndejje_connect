@@ -79,6 +79,14 @@ fun LoginContent(
             )
         }
 
+        if (authState is AuthState.RegisterSuccess) {
+            Text(
+                text = stringResource(id = R.string.registration_successful),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_medium))
+            )
+        }
+
         OutlinedTextField(
             value = regNumber,
             onValueChange = { regNumber = it },

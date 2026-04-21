@@ -34,15 +34,20 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
-    fun register(name: String, regNumber: String, password: String) {
+    fun register(name: String, regNumber: String, password: String, level: String, course: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             val existingUser = repository.getUserByRegNumber(regNumber)
             if (existingUser == null) {
-                val newUser = User(regNumber = regNumber, name = name, password = password)
+                val newUser = User(
+                    regNumber = regNumber, 
+                    name = name, 
+                    password = password,
+                    level = level,
+                    course = course
+                )
                 repository.registerUser(newUser)
-                _currentUser.value = newUser
-                _authState.value = AuthState.Success
+                _authState.value = AuthState.RegisterSuccess
             } else {
                 _authState.value = AuthState.Error("User with this registration number already exists")
             }
@@ -72,5 +77,6 @@ sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
     object Success : AuthState()
+    object RegisterSuccess : AuthState()
     data class Error(val message: String) : AuthState()
 }
