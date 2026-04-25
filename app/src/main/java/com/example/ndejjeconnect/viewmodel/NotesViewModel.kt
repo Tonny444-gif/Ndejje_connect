@@ -10,8 +10,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Logic Layer: Manages the state of the Notes Screen.
- * Exposes data via StateFlow for the Compose UI to observe.
+ * NotesViewModel: The "Librarian".
+ * 
+ * Think of this as the person in charge of the university's notebook archive. 
+ * - They keep a list of all notes ever written (StateFlow).
+ * - They help you "File a new notebook" (Add Note).
+ * - They help you "Remove an old notebook" (Delete Note).
  */
 class NotesViewModel(private val repository: MainRepository) : ViewModel() {
 
@@ -27,6 +31,9 @@ class NotesViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
+    /**
+     * Add Note: Writing a new notebook and putting it on the shelf.
+     */
     fun addNote(title: String, content: String, courseUnit: String, attachmentUri: String? = null) {
         viewModelScope.launch {
             val newNote = Note(
@@ -39,6 +46,9 @@ class NotesViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
+    /**
+     * Delete Note: Taking a notebook off the shelf and throwing it away.
+     */
     fun deleteNote(note: Note) {
         viewModelScope.launch {
             repository.deleteNote(note)

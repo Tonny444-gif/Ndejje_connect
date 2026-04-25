@@ -17,8 +17,14 @@ import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.AuthState
 
 /**
- * View Layer: Registration Screen
- * Allows new students to create an account.
+ * Register Screen: The "Sign Up" Desk.
+ * 
+ * Think of this screen like a student enrollment office. 
+ * Before you can enter the main building (the Dashboard), you need to give the 
+ * university your details (Name, Reg Number, Faculty) and create a password.
+ * 
+ * Once you "sign the book" (click Register), you are sent back to the 
+ * "Check-in Desk" (Login Screen) to verify your new credentials.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +63,8 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // University Branding Header Placeholder
+        // --- STEP 1: Branding ---
+        // Showing the University Name so users know where they are.
         Text(
             text = stringResource(id = R.string.university_name),
             fontSize = dimensionResource(id = R.dimen.text_size_large).value.sp,
@@ -70,6 +77,8 @@ fun RegisterScreen(
             modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_medium))
         )
 
+        // --- STEP 2: Error Handling ---
+        // If the "Brain" (ViewModel) says something went wrong, we show it here.
         if (authState is AuthState.Error) {
             Text(
                 text = (authState as AuthState.Error).message,
@@ -78,6 +87,8 @@ fun RegisterScreen(
             )
         }
 
+        // --- STEP 3: Identity Details ---
+        // Collecting the student's name and registration number.
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
@@ -96,6 +107,10 @@ fun RegisterScreen(
         
         Spacer(modifier = Modifier.height(8.dp))
 
+        // --- STEP 4: Academic Selection ---
+        // Dropdown menus to pick Level (e.g., Bachelor), Faculty, and Course.
+        // It's like picking your department in the university.
+        
         // Level Selection
         ExposedDropdownMenuBox(
             expanded = levelExpanded,
@@ -197,6 +212,8 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // --- STEP 5: Security ---
+        // Setting up a password to protect the account.
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -207,6 +224,8 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // --- STEP 6: Submission ---
+        // Clicking this sends the details to the "Manager" (Repository) to save them.
         Button(
             onClick = { viewModel.register(name, regNumber, password, selectedLevel, selectedCourse) },
             modifier = Modifier.fillMaxWidth(),
@@ -224,6 +243,7 @@ fun RegisterScreen(
             }
         }
 
+        // Link to go back to Login if the user already has an account.
         TextButton(onClick = onNavigateToLogin) {
             Text(stringResource(id = R.string.already_have_account_login))
         }

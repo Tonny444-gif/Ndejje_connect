@@ -40,7 +40,8 @@ fun DashboardScreen(
     onNavigateToAssignments: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToResults: () -> Unit,
-    onNavigateToFinance: () -> Unit
+    onNavigateToFinance: () -> Unit,
+    onNavigateToLibrary: () -> Unit
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val nextClass by dashboardViewModel.nextClass.collectAsState()
@@ -69,6 +70,7 @@ fun DashboardScreen(
         onNavigateToProfile = onNavigateToProfile,
         onNavigateToResults = onNavigateToResults,
         onNavigateToFinance = onNavigateToFinance,
+        onNavigateToLibrary = onNavigateToLibrary,
         onAddHighlight = { content -> dashboardViewModel.addHighlight(content) },
         onRemoveFeedItem = { item -> dashboardViewModel.removeFeedItem(item) }
     )
@@ -90,6 +92,7 @@ fun DashboardContent(
     onNavigateToProfile: () -> Unit,
     onNavigateToResults: () -> Unit,
     onNavigateToFinance: () -> Unit,
+    onNavigateToLibrary: () -> Unit,
     onAddHighlight: (String) -> Unit,
     onRemoveFeedItem: (FeedItem) -> Unit
 ) {
@@ -219,7 +222,7 @@ fun DashboardContent(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 QuickActionButton(Icons.Default.BarChart, "Results", onClick = onNavigateToResults)
-                QuickActionButton(Icons.AutoMirrored.Filled.LibraryBooks, "Library", onClick = {})
+                QuickActionButton(Icons.AutoMirrored.Filled.LibraryBooks, "Library", onClick = onNavigateToLibrary)
                 QuickActionButton(Icons.Default.Payment, "Finance", onClick = onNavigateToFinance)
             }
         }
@@ -368,6 +371,7 @@ fun DashboardScreenPreview() {
             onNavigateToProfile = {},
             onNavigateToResults = {},
             onNavigateToFinance = {},
+            onNavigateToLibrary = {},
             onAddHighlight = {},
             onRemoveFeedItem = {}
         )

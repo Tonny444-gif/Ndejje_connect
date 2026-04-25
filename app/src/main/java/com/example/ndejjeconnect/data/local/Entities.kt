@@ -79,3 +79,58 @@ data class FeedItem(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+/**
+ * Represents a Library Book (Physical or Digital).
+ */
+@Entity(tableName = "books")
+data class Book(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val title: String,
+    val author: String,
+    val category: String,
+    val isDigital: Boolean = false,
+    val floor: String? = null,
+    val aisle: String? = null,
+    val shelf: String? = null,
+    val isAvailable: Boolean = true,
+    val coverUri: String? = null
+)
+
+/**
+ * Represents a Study Space in the library.
+ */
+@Entity(tableName = "study_spaces")
+data class StudySpace(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String,
+    val type: String, // Desk, Pod, Group Room
+    val capacity: Int,
+    val isOccupied: Boolean = false
+)
+
+/**
+ * Represents a Book Loan or Reservation.
+ */
+@Entity(tableName = "book_loans")
+data class BookLoan(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val regNumber: String,
+    val bookId: Int,
+    val dueDate: Long,
+    val status: String, // "Reserved", "On Loan", "Returned"
+    val isAutoRenewed: Boolean = false
+)
+
+/**
+ * Represents a Study Space Booking.
+ */
+@Entity(tableName = "space_bookings")
+data class SpaceBooking(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val regNumber: String,
+    val spaceId: Int,
+    val startTime: Long,
+    val endTime: Long,
+    val isCheckedIn: Boolean = false
+)
+

@@ -24,9 +24,13 @@ import androidx.compose.ui.unit.sp
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 
 /**
- * View Layer: Profile Screen
- * Displays student information and app settings.
- * MVVM Pattern: Observes AuthViewModel for user data.
+ * Profile Screen: The "Student ID Card".
+ * 
+ * Think of this screen like your personal student portal. 
+ * It shows your "Photo" (avatar) and "ID Details" (Name and Reg Number).
+ * 
+ * - The "Brain" (AuthViewModel) knows who is currently logged in.
+ * - You can "Update your ID" (Edit Profile) or "Exit the Building" (Logout).
  */
 @Composable
 fun ProfileScreen(
@@ -43,7 +47,8 @@ fun ProfileScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Section 1: Profile Header (Image and Basic Info)
+        // --- SECTION 1: The ID Card ---
+        // Showing your face and your name.
         ProfileHeader(
             name = currentUser?.name ?: "Unknown Student",
             regNumber = currentUser?.regNumber ?: "N/A"
@@ -53,7 +58,8 @@ fun ProfileScreen(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Section 2: Action List (Edit, Logout)
+        // --- SECTION 2: Things you can do ---
+        // Change your name or sign out.
         ProfileMenuItem(
             icon = Icons.Default.Edit,
             label = "Edit Profile Details",
@@ -72,6 +78,8 @@ fun ProfileScreen(
     }
 
     if (showEditDialog && currentUser != null) {
+        // --- SECTION 3: Editing ---
+        // A small popup to change your name.
         EditProfileDialog(
             currentName = currentUser?.name ?: "",
             onDismiss = { showEditDialog = false },
@@ -83,6 +91,10 @@ fun ProfileScreen(
     }
 }
 
+/**
+ * Edit Dialog: The "Correction Pen".
+ * Use this to fix a typo in your name.
+ */
 @Composable
 fun EditProfileDialog(
     currentName: String,

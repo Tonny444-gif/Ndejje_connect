@@ -20,8 +20,13 @@ import com.example.ndejjeconnect.data.local.Note
 import com.example.ndejjeconnect.viewmodel.NotesViewModel
 
 /**
- * View Layer: Notes Screen
- * Central repository for course notes.
+ * Notes Screen: The "Lecture Notebook".
+ * 
+ * Think of this screen like a digital shelf of notebooks. 
+ * Every time you attend a lecture or want to remember something, you create a "Note".
+ * 
+ * - The "Manager" (ViewModel) handles fetching all your saved notebooks.
+ * - The "Plus Button" lets you grab a fresh sheet of paper to write on.
  */
 @Composable
 fun NotesScreen(viewModel: NotesViewModel) {
@@ -63,6 +68,8 @@ fun ViewNoteDialog(
     onDismiss: () -> Unit,
     onDelete: () -> Unit
 ) {
+    // --- STEP 1: Reading the Note ---
+    // This is like opening a notebook to a specific page to read what's inside.
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(note.title, fontWeight = FontWeight.Bold) },
@@ -91,6 +98,8 @@ fun ViewNoteDialog(
             TextButton(onClick = onDismiss) { Text("Close") }
         },
         dismissButton = {
+            // --- STEP 2: Tearing out a Page ---
+            // If the user doesn't need this note anymore, they can "delete" it (burn it).
             TextButton(
                 onClick = onDelete,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
@@ -106,11 +115,15 @@ fun AddNoteDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String?) -> Unit
 ) {
+    // --- STEP 1: Setting up a Blank Page ---
+    // We create temporary slots (State) to hold the title, course, and text
+    // while the user is typing.
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var courseUnit by remember { mutableStateOf("") }
     var attachmentUri by remember { mutableStateOf<String?>(null) }
 
+    // This is like a "File Picker" tool that helps us find documents on the phone.
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -122,6 +135,7 @@ fun AddNoteDialog(
         title = { Text("New Course Note") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Fields for the user to fill in the "Notebook" details.
                 OutlinedTextField(
                     value = title, 
                     onValueChange = { title = it }, 
@@ -141,6 +155,7 @@ fun AddNoteDialog(
                     modifier = Modifier.fillMaxWidth().height(120.dp)
                 )
                 
+                // Button to "clip" a file or image to this note.
                 TextButton(onClick = { launcher.launch("*/*") }) {
                     Icon(Icons.Default.AttachFile, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
@@ -149,6 +164,8 @@ fun AddNoteDialog(
             }
         },
         confirmButton = {
+            // --- STEP 2: Placing it on the Shelf ---
+            // Once saved, the data is handed to the Brain (ViewModel) to keep it safe.
             Button(
                 onClick = { onSave(title, content, courseUnit, attachmentUri) },
                 enabled = title.isNotBlank() && content.isNotBlank()
@@ -170,6 +187,7 @@ fun NotesContent(
 ) {
     Scaffold(
         floatingActionButton = {
+            // This is the "Add New Note" button.
             FloatingActionButton(onClick = onAddClick) {
                 Icon(Icons.Default.Add, contentDescription = "Add Note")
             }
@@ -183,11 +201,14 @@ fun NotesContent(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            // If the bookshelf is empty, we show a friendly message.
             if (notes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     Text("No notes found. Create one!")
                 }
             } else {
+                // --- STEP 3: Displaying the Grid ---
+                // We show all the notebooks in a neat grid (two columns).
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
                     modifier = Modifier.fillMaxSize(),
@@ -204,6 +225,10 @@ fun NotesContent(
     }
 }
 
+/**
+ * Note Card: A "Post-it" preview.
+ * Shows the course name, title, and a few lines of the note content.
+ */
 @Composable
 fun NoteCard(note: Note, onClick: () -> Unit) {
     Card(

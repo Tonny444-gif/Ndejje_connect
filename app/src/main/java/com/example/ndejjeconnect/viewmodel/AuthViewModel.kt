@@ -10,8 +10,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Logic Layer: Manages Authentication and User Sessions.
- * Handles login, registration, and profile state.
+ * AuthViewModel: The "Security Guard & ID Manager".
+ * 
+ * Think of this as the person sitting at the university entrance.
+ * - They check your ID (Login).
+ * - They help new students sign the register (Register).
+ * - They remember who is currently inside the building (Session Management).
  */
 class AuthViewModel(private val repository: MainRepository) : ViewModel() {
 
@@ -21,6 +25,11 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
+    /**
+     * Login: Checking the ID.
+     * We ask the "Manager" (Repository) to find the student in the database.
+     * If the password matches, we let them in.
+     */
     fun login(regNumber: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -34,6 +43,10 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
+    /**
+     * Register: Adding a new student to the books.
+     * We check if the student is already registered. If not, we create a new "file" (User).
+     */
     fun register(name: String, regNumber: String, password: String, level: String, course: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -54,11 +67,17 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
         }
     }
 
+    /**
+     * Logout: Handing back the ID and leaving.
+     */
     fun logout() {
         _currentUser.value = null
         _authState.value = AuthState.Idle
     }
 
+    /**
+     * Update Profile: Changing the name on your ID card.
+     */
     fun updateProfile(name: String, profileImageUri: String?) {
         val user = _currentUser.value ?: return
         viewModelScope.launch {

@@ -13,7 +13,8 @@ class MainRepository(
     private val timetableDao: TimetableDao,
     private val userDao: UserDao,
     private val financeDao: FinanceDao,
-    private val feedDao: FeedDao
+    private val feedDao: FeedDao,
+    private val libraryDao: LibraryDao
 ) {
     // Notes logic
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
@@ -43,4 +44,19 @@ class MainRepository(
     val allFeedItems: Flow<List<FeedItem>> = feedDao.getAllFeedItems()
     suspend fun insertFeedItem(item: FeedItem) = feedDao.insertFeedItem(item)
     suspend fun deleteFeedItem(item: FeedItem) = feedDao.deleteFeedItem(item)
+
+    // Library logic
+    val allBooks: Flow<List<Book>> = libraryDao.getAllBooks()
+    fun getBooksByCategory(category: String): Flow<List<Book>> = libraryDao.getBooksByCategory(category)
+    suspend fun insertBook(book: Book) = libraryDao.insertBook(book)
+
+    fun getLoansForUser(regNumber: String): Flow<List<BookLoan>> = libraryDao.getLoansForUser(regNumber)
+    suspend fun insertLoan(loan: BookLoan) = libraryDao.insertLoan(loan)
+    suspend fun updateLoan(loan: BookLoan) = libraryDao.updateLoan(loan)
+
+    val allSpaces: Flow<List<StudySpace>> = libraryDao.getAllSpaces()
+    fun getBookingsForUser(regNumber: String): Flow<List<SpaceBooking>> = libraryDao.getBookingsForUser(regNumber)
+    suspend fun insertBooking(booking: SpaceBooking) = libraryDao.insertBooking(booking)
+
+    suspend fun insertSpace(space: StudySpace) = libraryDao.insertSpace(space)
 }

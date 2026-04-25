@@ -31,6 +31,10 @@ class ViewModelFactory(private val repository: MainRepository) : ViewModelProvid
                 @Suppress("UNCHECKED_CAST")
                 TimetableViewModel(repository) as T
             }
+            modelClass.isAssignableFrom(LibraryViewModel::class.java) -> {
+                @Suppress("UNCHECKED_CAST")
+                LibraryViewModel(repository) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

@@ -18,8 +18,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * View Layer: Assignments Screen
- * Centralized task tracking for students.
+ * Assignments Screen: The "Task Tracker".
+ * 
+ * Think of this screen like a digital "To-Do List" on a fridge. 
+ * It keeps track of all the homework, projects, and tasks you need to finish.
+ * 
+ * - The "Brain" (AssignmentsViewModel) remembers all your tasks.
+ * - The "Plus Button" lets you pin a new task to the list.
  */
 @Composable
 fun AssignmentsScreen(
@@ -31,6 +36,7 @@ fun AssignmentsScreen(
 
     Scaffold(
         floatingActionButton = {
+            // This is the "Add Task" button.
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add Assignment")
             }
@@ -44,11 +50,14 @@ fun AssignmentsScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            // If you've finished everything (or haven't started), we show a clean slate.
             if (assignments.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No assignments yet. Click + to add one.")
                 }
             } else {
+                // --- STEP 1: Listing the Tasks ---
+                // We show your tasks one by one in a scrollable list.
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
@@ -69,6 +78,7 @@ fun AssignmentsScreen(
         AddAssignmentDialog(
             onDismiss = { showAddDialog = false },
             onSave = { title, desc, priority ->
+                // Saving the new task into the "Brain".
                 viewModel.addAssignment(title, desc, System.currentTimeMillis(), priority)
                 showAddDialog = false
             }
@@ -81,6 +91,7 @@ fun AddAssignmentDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, Int) -> Unit
 ) {
+    // Temporary storage for what the user is typing.
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf(2) } // Default Medium
@@ -90,18 +101,21 @@ fun AddAssignmentDialog(
         title = { Text("New Assignment") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Setting the name of the task.
                 OutlinedTextField(
                     value = title, 
                     onValueChange = { title = it }, 
                     label = { Text("Title") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                // Writing down more details about the task.
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth().height(100.dp)
                 )
+                // Picking how urgent this task is.
                 Text("Priority (1: High, 3: Low)", style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = priority.toFloat(),
@@ -125,6 +139,10 @@ fun AddAssignmentDialog(
     )
 }
 
+/**
+ * Assignment Card: A single "Sticky Note" for a task.
+ * It shows the title, when it's due, and a checkbox to mark it as "Done".
+ */
 @Composable
 fun AssignmentCard(
     assignment: Assignment,

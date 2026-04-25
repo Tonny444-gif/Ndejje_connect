@@ -49,7 +49,8 @@ class MainActivity : ComponentActivity() {
                 database.timetableDao(),
                 database.userDao(),
                 database.financeDao(),
-                database.feedDao()
+                database.feedDao(),
+                database.libraryDao()
             )
         }
         // ViewModel Factory for dependency injection
@@ -66,8 +67,8 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = {
-                        // View Logic: Only show bottom navigation if not on the login screen
-                        if (currentRoute != Screen.Login.route && currentRoute != null) {
+                        // View Logic: Only show bottom navigation if NOT on Login or Register screens
+                        if (currentRoute != Screen.Login.route && currentRoute != Screen.Register.route && currentRoute != null) {
                             NavigationBar {
                                 NavigationBarItem(
                                     icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
@@ -171,7 +172,8 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToAssignments = { navController.navigate(Screen.Assignments.route) },
                                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                                 onNavigateToResults = { navController.navigate(Screen.Results.route) },
-                                onNavigateToFinance = { navController.navigate(Screen.Finance.route) }
+                                onNavigateToFinance = { navController.navigate(Screen.Finance.route) },
+                                onNavigateToLibrary = { navController.navigate(Screen.Library.route) }
                             )
                         }
                         composable(Screen.Results.route) {
@@ -185,6 +187,14 @@ class MainActivity : ComponentActivity() {
                             FinanceScreen(
                                 authViewModel = authViewModel,
                                 dashboardViewModel = dashboardViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable(Screen.Library.route) {
+                            val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
+                            LibraryScreen(
+                                authViewModel = authViewModel,
+                                libraryViewModel = libraryViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }

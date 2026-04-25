@@ -76,3 +76,39 @@ interface FeedDao {
     suspend fun deleteFeedItem(item: FeedItem)
 }
 
+@Dao
+interface LibraryDao {
+    // Books
+    @Query("SELECT * FROM books")
+    fun getAllBooks(): Flow<List<Book>>
+
+    @Query("SELECT * FROM books WHERE category = :category")
+    fun getBooksByCategory(category: String): Flow<List<Book>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBook(book: Book)
+
+    // Loans
+    @Query("SELECT * FROM book_loans WHERE regNumber = :regNumber")
+    fun getLoansForUser(regNumber: String): Flow<List<BookLoan>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLoan(loan: BookLoan)
+
+    @Update
+    suspend fun updateLoan(loan: BookLoan)
+
+    // Spaces
+    @Query("SELECT * FROM study_spaces")
+    fun getAllSpaces(): Flow<List<StudySpace>>
+
+    @Query("SELECT * FROM space_bookings WHERE regNumber = :regNumber")
+    fun getBookingsForUser(regNumber: String): Flow<List<SpaceBooking>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBooking(booking: SpaceBooking)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSpace(space: StudySpace)
+}
+
