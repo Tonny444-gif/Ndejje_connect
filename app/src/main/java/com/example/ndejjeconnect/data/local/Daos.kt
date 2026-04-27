@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
+    /**
+     * Retrieves all notes from the database, ordered by creation date.
+     */
     @Query("SELECT * FROM notes ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<Note>>
 
@@ -17,6 +20,9 @@ interface NoteDao {
 
 @Dao
 interface AssignmentDao {
+    /**
+     * Retrieves all assignments, sorted by the soonest due date.
+     */
     @Query("SELECT * FROM assignments ORDER BY dueDate ASC")
     fun getAllAssignments(): Flow<List<Assignment>>
 
@@ -32,6 +38,9 @@ interface AssignmentDao {
 
 @Dao
 interface TimetableDao {
+    /**
+     * Retrieves the schedule for a specific day.
+     */
     @Query("SELECT * FROM timetable WHERE dayOfWeek = :day")
     fun getTimetableForDay(day: String): Flow<List<TimetableEntry>>
 
@@ -45,6 +54,9 @@ interface TimetableDao {
 
 @Dao
 interface UserDao {
+    /**
+     * Finds a user by their registration number.
+     */
     @Query("SELECT * FROM users WHERE regNumber = :regNumber LIMIT 1")
     suspend fun getUserByRegNumber(regNumber: String): User?
 
@@ -57,6 +69,9 @@ interface UserDao {
 
 @Dao
 interface FinanceDao {
+    /**
+     * Provides financial status for a specific user.
+     */
     @Query("SELECT * FROM finance WHERE regNumber = :regNumber")
     fun getFinanceForUser(regNumber: String): Flow<FinanceRecord?>
 
@@ -66,6 +81,9 @@ interface FinanceDao {
 
 @Dao
 interface FeedDao {
+    /**
+     * Retrieves campus feed items, newest first.
+     */
     @Query("SELECT * FROM feed_items ORDER BY timestamp DESC")
     fun getAllFeedItems(): Flow<List<FeedItem>>
 
@@ -78,7 +96,7 @@ interface FeedDao {
 
 @Dao
 interface LibraryDao {
-    // Books
+    // --- Books ---
     @Query("SELECT * FROM books")
     fun getAllBooks(): Flow<List<Book>>
 
@@ -88,7 +106,7 @@ interface LibraryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBook(book: Book)
 
-    // Loans
+    // --- Loans ---
     @Query("SELECT * FROM book_loans WHERE regNumber = :regNumber")
     fun getLoansForUser(regNumber: String): Flow<List<BookLoan>>
 
@@ -98,7 +116,7 @@ interface LibraryDao {
     @Update
     suspend fun updateLoan(loan: BookLoan)
 
-    // Spaces
+    // --- Study Spaces ---
     @Query("SELECT * FROM study_spaces")
     fun getAllSpaces(): Flow<List<StudySpace>>
 
@@ -111,4 +129,5 @@ interface LibraryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSpace(space: StudySpace)
 }
+
 

@@ -16,40 +16,45 @@ class MainRepository(
     private val feedDao: FeedDao,
     private val libraryDao: LibraryDao
 ) {
-    // Notes logic
+    // --- Notes Management ---
+    // Provides a stream of all saved notes
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
     suspend fun insertNote(note: Note) = noteDao.insertNote(note)
     suspend fun deleteNote(note: Note) = noteDao.deleteNote(note)
 
-    // Assignments logic
+    // --- Assignments Tracking ---
+    // Provides a stream of all assignments sorted by due date
     val allAssignments: Flow<List<Assignment>> = assignmentDao.getAllAssignments()
     suspend fun insertAssignment(assignment: Assignment) = assignmentDao.insertAssignment(assignment)
     suspend fun updateAssignment(assignment: Assignment) = assignmentDao.updateAssignment(assignment)
 
-    // Timetable logic
+    // --- Timetable / Schedule ---
+    // Fetches entries for a specific day (e.g., "Monday")
     fun getTimetableForDay(day: String): Flow<List<TimetableEntry>> = timetableDao.getTimetableForDay(day)
     suspend fun insertTimetableEntry(entry: TimetableEntry) = timetableDao.insertEntry(entry)
     suspend fun deleteTimetableEntry(id: Int) = timetableDao.deleteEntry(id)
 
-    // User/Auth logic
+    // --- User Profile & Authentication ---
     suspend fun getUserByRegNumber(regNumber: String) = userDao.getUserByRegNumber(regNumber)
     suspend fun registerUser(user: User) = userDao.insertUser(user)
     suspend fun updateUser(user: User) = userDao.updateUser(user)
 
-    // Finance logic
+    // --- Financial Records ---
     fun getFinanceForUser(regNumber: String): Flow<FinanceRecord?> = financeDao.getFinanceForUser(regNumber)
     suspend fun updateFinance(finance: FinanceRecord) = financeDao.insertFinance(finance)
 
-    // Feed logic
+    // --- Campus Feed ---
     val allFeedItems: Flow<List<FeedItem>> = feedDao.getAllFeedItems()
     suspend fun insertFeedItem(item: FeedItem) = feedDao.insertFeedItem(item)
     suspend fun deleteFeedItem(item: FeedItem) = feedDao.deleteFeedItem(item)
 
-    // Library logic
+    // --- Library Services ---
+    // Book Catalog
     val allBooks: Flow<List<Book>> = libraryDao.getAllBooks()
     fun getBooksByCategory(category: String): Flow<List<Book>> = libraryDao.getBooksByCategory(category)
     suspend fun insertBook(book: Book) = libraryDao.insertBook(book)
 
+    // Loans and Bookings
     fun getLoansForUser(regNumber: String): Flow<List<BookLoan>> = libraryDao.getLoansForUser(regNumber)
     suspend fun insertLoan(loan: BookLoan) = libraryDao.insertLoan(loan)
     suspend fun updateLoan(loan: BookLoan) = libraryDao.updateLoan(loan)
