@@ -96,32 +96,14 @@ fun DashboardContent(
     onAddHighlight: (String) -> Unit,
     onRemoveFeedItem: (FeedItem) -> Unit
 ) {
-    var showAddDialog by remember { mutableStateOf(false) }
-    var highlightText by remember { mutableStateOf("") }
+    var isAddHighlightDialogOpen by remember { mutableStateOf(false) }
 
-    if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = { Text("Add Highlight") },
-            text = {
-                OutlinedTextField(
-                    value = highlightText,
-                    onValueChange = { highlightText = it },
-                    label = { Text("What's happening?") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    if (highlightText.isNotBlank()) {
-                        onAddHighlight(highlightText)
-                        highlightText = ""
-                        showAddDialog = false
-                    }
-                }) { Text("Post") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) { Text("Cancel") }
+    if (isAddHighlightDialogOpen) {
+        AddHighlightDialog(
+            onDismiss = { isAddHighlightDialogOpen = false },
+            onConfirm = { highlight ->
+                onAddHighlight(highlight)
+                isAddHighlightDialogOpen = false
             }
         )
     }
@@ -134,140 +116,45 @@ fun DashboardContent(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = CircleShape,
-                    color = Color.White,
-                    shadowElevation = 2.dp
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ndejje_logo),
-                        contentDescription = "University Logo",
-                        modifier = Modifier.padding(16.dp),
-                        contentScale = ContentScale.Fit
-                    )
-                }
-                
-                Box(
-                    modifier = Modifier
-                        .size(45.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .clickable { onNavigateToProfile() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Person, contentDescription = "Profile")
-                }
-            }
+            DashboardHeader(onProfileClick = onNavigateToProfile)
         }
 
         item {
-            Column {
-                Text(
-                    text = "Hello, ${userName?.split(" ")?.firstOrNull() ?: "Student"}!",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Text(
-                    text = "$userLevel in $userCourse",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SuggestionChip(
-                        onClick = onNavigateToResults, 
-                        label = { Text("GPA: ${"%.2f".format(userGpa)}") }
-                    )
-                }
-            }
+            UserInfoSection(
+                userName = userName,
+                userLevel = userLevel,
+                userCourse = userCourse,
+                userGpa = userGpa,
+                onNavigateToResults = onNavigateToResults
+            )
         }
 
         item {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                BentoCard(
-                    modifier = Modifier.weight(1.5f).height(160.dp),
-                    title = "Next Up",
-                    content = nextClass?.courseName ?: "No more classes",
-                    subtitle = if (nextClass != null) "${nextClass.startTime} • ${nextClass.venue}" else "Free time!",
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
-                    gradient = Brush.verticalGradient(listOf(Color(0xFF1A237E), Color(0xFF3949AB))),
-                    onClick = onNavigateToTimetable
-                )
-                
-                BentoCard(
-                    modifier = Modifier.weight(1f).height(160.dp),
-                    title = "Tasks",
-                    content = "$pendingCount",
-                    subtitle = "Pending",
-                    icon = Icons.AutoMirrored.Filled.Assignment,
-                    gradient = Brush.verticalGradient(listOf(Color(0xFF004D40), Color(0xFF00897B))),
-                    onClick = onNavigateToAssignments
-                )
-            }
+            OverviewCards(
+                nextClass = nextClass,
+                pendingCount = pendingCount,
+                onNavigateToTimetable = onNavigateToTimetable,
+                onNavigateToAssignments = onNavigateToAssignments
+            )
         }
 
         item {
-            Text(text = "Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                QuickActionButton(Icons.Default.BarChart, "Results", onClick = onNavigateToResults)
-                QuickActionButton(Icons.AutoMirrored.Filled.LibraryBooks, "Library", onClick = onNavigateToLibrary)
-                QuickActionButton(Icons.Default.Payment, "Finance", onClick = onNavigateToFinance)
-            }
+            QuickActionsSection(
+                onNavigateToResults = onNavigateToResults,
+                onNavigateToLibrary = onNavigateToLibrary,
+                onNavigateToFinance = onNavigateToFinance
+            )
         }
 
         item {
-            val total = financeRecord?.totalFees ?: 0.0
-            val paid = financeRecord?.amountPaid ?: 0.0
-            val progress = if (total > 0) (paid / total).toFloat() else 0f
-            val balance = (total - paid).coerceAtLeast(0.0)
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNavigateToFinance() }
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "Financial Status", fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "Paid: ${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Bal: ${balance.toLong()} UGX", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
+            FinancialStatusCard(
+                financeRecord = financeRecord,
+                onNavigateToFinance = onNavigateToFinance
+            )
         }
 
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Campus Feed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Highlight")
-                }
-            }
+            FeedHeader(onAddClick = { isAddHighlightDialogOpen = true })
         }
 
         items(feedItems) { item ->
@@ -278,6 +165,199 @@ fun DashboardContent(
             )
         }
     }
+}
+
+@Composable
+private fun DashboardHeader(onProfileClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            modifier = Modifier.size(100.dp),
+            shape = CircleShape,
+            color = Color.White,
+            shadowElevation = 2.dp
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ndejje_logo),
+                contentDescription = "University Logo",
+                modifier = Modifier.padding(16.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .size(45.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.Person, contentDescription = "Profile")
+        }
+    }
+}
+
+@Composable
+private fun UserInfoSection(
+    userName: String?,
+    userLevel: String?,
+    userCourse: String?,
+    userGpa: Double,
+    onNavigateToResults: () -> Unit
+) {
+    Column {
+        Text(
+            text = "Hello, ${userName?.split(" ")?.firstOrNull() ?: "Student"}!",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Text(
+            text = "$userLevel in $userCourse",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.secondary
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SuggestionChip(
+                onClick = onNavigateToResults,
+                label = { Text("GPA: ${"%.2f".format(userGpa)}") }
+            )
+        }
+    }
+}
+
+@Composable
+private fun OverviewCards(
+    nextClass: TimetableEntry?,
+    pendingCount: Int,
+    onNavigateToTimetable: () -> Unit,
+    onNavigateToAssignments: () -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        BentoCard(
+            modifier = Modifier.weight(1.5f).height(160.dp),
+            title = "Next Up",
+            content = nextClass?.courseName ?: "No more classes",
+            subtitle = if (nextClass != null) "${nextClass.startTime} • ${nextClass.venue}" else "Free time!",
+            icon = Icons.AutoMirrored.Filled.MenuBook,
+            gradient = Brush.verticalGradient(listOf(Color(0xFF1A237E), Color(0xFF3949AB))),
+            onClick = onNavigateToTimetable
+        )
+
+        BentoCard(
+            modifier = Modifier.weight(1f).height(160.dp),
+            title = "Tasks",
+            content = "$pendingCount",
+            subtitle = "Pending",
+            icon = Icons.AutoMirrored.Filled.Assignment,
+            gradient = Brush.verticalGradient(listOf(Color(0xFF004D40), Color(0xFF00897B))),
+            onClick = onNavigateToAssignments
+        )
+    }
+}
+
+@Composable
+private fun QuickActionsSection(
+    onNavigateToResults: () -> Unit,
+    onNavigateToLibrary: () -> Unit,
+    onNavigateToFinance: () -> Unit
+) {
+    Column {
+        Text(text = "Quick Actions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            QuickActionButton(Icons.Default.BarChart, "Results", onClick = onNavigateToResults)
+            QuickActionButton(Icons.AutoMirrored.Filled.LibraryBooks, "Library", onClick = onNavigateToLibrary)
+            QuickActionButton(Icons.Default.Payment, "Finance", onClick = onNavigateToFinance)
+        }
+    }
+}
+
+@Composable
+private fun FinancialStatusCard(
+    financeRecord: FinanceRecord?,
+    onNavigateToFinance: () -> Unit
+) {
+    val total = financeRecord?.totalFees ?: 0.0
+    val paid = financeRecord?.amountPaid ?: 0.0
+    val progress = if (total > 0) (paid / total).toFloat() else 0f
+    val balance = (total - paid).coerceAtLeast(0.0)
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToFinance() }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Financial Status", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Paid: ${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Bal: ${balance.toLong()} UGX", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeedHeader(onAddClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "Campus Feed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        IconButton(onClick = onAddClick) {
+            Icon(Icons.Default.Add, contentDescription = "Add Highlight")
+        }
+    }
+}
+
+@Composable
+private fun AddHighlightDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var highlightText by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Highlight") },
+        text = {
+            OutlinedTextField(
+                value = highlightText,
+                onValueChange = { highlightText = it },
+                label = { Text("What's happening?") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (highlightText.isNotBlank()) {
+                    onConfirm(highlightText)
+                }
+            }) { Text("Post") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
 
 @Composable
@@ -296,8 +376,8 @@ fun BentoCard(
     ) {
         Box(modifier = Modifier.fillMaxSize().background(gradient).padding(16.dp)) {
             Icon(
-                icon, 
-                contentDescription = null, 
+                icon,
+                contentDescription = null,
                 modifier = Modifier.align(Alignment.TopEnd).size(32.dp).alpha(0.3f),
                 tint = Color.White
             )
