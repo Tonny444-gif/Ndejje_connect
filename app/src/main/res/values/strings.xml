@@ -2,7 +2,7 @@
     <string name="app_name">Connect</string>
 
     <!-- Login & Registration -->
-    <string name="university_name">NDEJJE UNIVERSITY</string>
+    <string name="university_name">NDEJJE CONNECT</string>
     <string name="student_portal">Student Portal</string>
     <string name="create_account">Create Student Account</string>
     <string name="full_name">Full Name</string>
