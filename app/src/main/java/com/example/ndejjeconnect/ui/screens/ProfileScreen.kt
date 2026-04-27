@@ -1,36 +1,27 @@
 package com.example.ndejjeconnect.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 
 /**
- * Profile Screen: The "Student ID Card".
- * 
- * Think of this screen like your personal student portal. 
- * It shows your "Photo" (avatar) and "ID Details" (Name and Reg Number).
- * 
- * - The "Brain" (AuthViewModel) knows who is currently logged in.
- * - You can "Update your ID" (Edit Profile) or "Exit the Building" (Logout).
+ * Profile Screen: Displays user information and provides account management options.
  */
 @Composable
 fun ProfileScreen(
@@ -39,101 +30,72 @@ fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
-    var showEditDialog by remember { mutableStateOf(false) }
+    var isEditDialogVisible by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        // --- SECTION 1: The ID Card ---
-        // Showing your face and your name.
-        ProfileHeader(
-            name = currentUser?.name ?: "Unknown Student",
-            regNumber = currentUser?.regNumber ?: "N/A"
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Profile Information Section
+            ProfileHeader(
+                name = currentUser?.name ?: "Unknown Student",
+                regNumber = currentUser?.regNumber ?: "N/A"
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(40.dp))
+            HorizontalDivider(modifier = Modifier.alpha(0.5f))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // --- SECTION 2: Things you can do ---
-        // Change your name or sign out.
-        ProfileMenuItem(
-            icon = Icons.Default.Edit,
-            label = "Edit Profile Details",
-            onClick = { showEditDialog = true }
-        )
+            // Account Actions Section
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ProfileMenuItem(
+                    icon = Icons.Default.Edit,
+                    label = "Edit Profile Details",
+                    onClick = { isEditDialogVisible = true }
+                )
 
-        ProfileMenuItem(
-            icon = Icons.Default.Logout,
-            label = "Logout",
-            labelColor = MaterialTheme.colorScheme.error,
-            onClick = {
-                viewModel.logout()
-                onLogout()
-            }
-        )
-    }
-
-    if (showEditDialog && currentUser != null) {
-        // --- SECTION 3: Editing ---
-        // A small popup to change your name.
-        EditProfileDialog(
-            currentName = currentUser?.name ?: "",
-            onDismiss = { showEditDialog = false },
-            onSave = { newName ->
-                viewModel.updateProfile(newName, currentUser?.profileImageUri)
-                showEditDialog = false
-            }
-        )
-    }
-}
-
-/**
- * Edit Dialog: The "Correction Pen".
- * Use this to fix a typo in your name.
- */
-@Composable
-fun EditProfileDialog(
-    currentName: String,
-    onDismiss: () -> Unit,
-    onSave: (String) -> Unit
-) {
-    var name by remember { mutableStateOf(currentName) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Profile") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Full Name") },
-                    modifier = Modifier.fillMaxWidth()
+                ProfileMenuItem(
+                    icon = Icons.Default.Logout,
+                    label = "Logout",
+                    labelColor = MaterialTheme.colorScheme.error,
+                    onClick = {
+                        viewModel.logout()
+                        onLogout()
+                    }
                 )
             }
-        },
-        confirmButton = {
-            Button(onClick = { onSave(name) }) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
-    )
+    }
+
+    // Dialogs
+    if (isEditDialogVisible && currentUser != null) {
+        EditProfileDialog(
+            currentName = currentUser?.name ?: "",
+            onDismiss = { isEditDialogVisible = false },
+            onSave = { newName ->
+                viewModel.updateProfile(newName, currentUser?.profileImageUri)
+                isEditDialogVisible = false
+            }
+        )
+    }
 }
 
 /**
- * Renders the top part of the profile with the user's avatar and ID.
+ * Header component displaying the user's avatar and primary identification.
  */
 @Composable
 fun ProfileHeader(name: String, regNumber: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // Profile Picture Placeholder
+        // Avatar Box
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -143,7 +105,7 @@ fun ProfileHeader(name: String, regNumber: String) {
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = "Profile Picture",
+                contentDescription = "Profile Avatar",
                 modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -153,19 +115,19 @@ fun ProfileHeader(name: String, regNumber: String) {
 
         Text(
             text = name,
-            fontSize = 22.sp,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Reg: $regNumber",
-            fontSize = 14.sp,
-            color = Color.Gray
+            text = "Registration: $regNumber",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
 /**
- * A reusable row for profile menu options.
+ * Reusable menu item for profile actions.
  */
 @Composable
 fun ProfileMenuItem(
@@ -177,21 +139,63 @@ fun ProfileMenuItem(
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
         Row(
             modifier = Modifier
-                .padding(vertical = 16.dp, horizontal = 8.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = labelColor)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = labelColor,
+                modifier = Modifier.size(24.dp)
+            )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = label,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 color = labelColor,
                 fontWeight = FontWeight.Medium
             )
         }
     }
+}
+
+/**
+ * Dialog for updating user profile information.
+ */
+@Composable
+fun EditProfileDialog(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Update Profile") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { if (name.isNotBlank()) onSave(name) }) {
+                Text("Save Changes")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
