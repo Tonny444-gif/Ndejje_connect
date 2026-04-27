@@ -30,7 +30,10 @@ import com.example.ndejjeconnect.viewmodel.NotesViewModel
  */
 @Composable
 fun NotesScreen(viewModel: NotesViewModel) {
+    // Collect the state of notes from the ViewModel
     val notes by viewModel.notes.collectAsState()
+    
+    // UI state for showing dialogs
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedNote by remember { mutableStateOf<Note?>(null) }
 

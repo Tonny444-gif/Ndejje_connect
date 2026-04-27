@@ -13,4 +13,12 @@
     <string name="no_account_signup">Don\'t have an account? Sign Up</string>
     <string name="already_have_account_login">Already have an account? Login</string>
     <string name="registration_successful">Registration successful! Please login.</string>
+
+    <!-- General Actions -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_close">Close</string>
+    <string name="action_back">Back</string>
 </resources>
