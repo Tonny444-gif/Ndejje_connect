@@ -236,15 +236,19 @@ fun NotesContent(
 fun NoteCard(note: Note, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp), // Added small vertical padding for better spacing
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
+            // Display course unit tag
             Text(
                 text = note.courseUnit,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
+            // Title with ellipsis for long text
             Text(
                 text = note.title,
                 style = MaterialTheme.typography.titleMedium,
@@ -253,6 +257,7 @@ fun NoteCard(note: Note, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
+            // Content preview restricted to 4 lines
             Text(
                 text = note.content,
                 style = MaterialTheme.typography.bodySmall,
