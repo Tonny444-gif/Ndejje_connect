@@ -31,7 +31,10 @@ fun AssignmentsScreen(
     viewModel: AssignmentsViewModel,
     onEditAssignment: (Int) -> Unit
 ) {
+    // Observe assignments from the ViewModel as state
     val assignments by viewModel.assignments.collectAsState()
+    
+    // State to manage the visibility of the Add Assignment dialog
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -86,6 +89,10 @@ fun AssignmentsScreen(
     }
 }
 
+/**
+ * Dialog for creating a new assignment.
+ * Provides inputs for title, description, and priority level.
+ */
 @Composable
 fun AddAssignmentDialog(
     onDismiss: () -> Unit,
@@ -154,7 +161,10 @@ fun AssignmentCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp), // Added small vertical padding for consistency
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Subtle elevation
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

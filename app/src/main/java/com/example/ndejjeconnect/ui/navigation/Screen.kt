@@ -1,5 +1,9 @@
 package com.example.ndejjeconnect.ui.navigation
 
+/**
+ * Defines the navigation structure of the app.
+ * Each screen has a unique [route] used for navigation.
+ */
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
