@@ -6,18 +6,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.ndejjeconnect.viewmodel.AssignmentsViewModel
-import kotlinx.coroutines.flow.map
 
 /**
- * Edit Assignment Screen: The "Correction Tape".
- * 
- * Sometimes we make a mistake when writing down a task or the deadline changes.
- * This screen lets you "edit" a task you already added to your list.
- * 
- * It's like pulling a sticky note off the fridge, erasing the old info, 
- * writing the new info, and sticking it back on.
+ * EditAssignmentScreen provides an interface for modifying existing assignment details.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,76 +20,123 @@ fun EditAssignmentScreen(
     viewModel: AssignmentsViewModel,
     onNavigateBack: () -> Unit
 ) {
-    // --- STEP 1: Finding the Task ---
-    // We look through all assignments to find the one that matches the ID we were given.
     val assignments by viewModel.assignments.collectAsState()
     val assignment = remember(assignments, assignmentId) {
         assignments.find { it.id == assignmentId }
     }
 
-    // Temporary storage for the edits.
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var titleText by remember { mutableStateOf("") }
+    var descriptionText by remember { mutableStateOf("") }
     
-    // Update local state when assignment is loaded from the database.
     LaunchedEffect(assignment) {
         assignment?.let {
-            title = it.title
-            description = it.description
+            titleText = it.title
+            descriptionText = it.description
         }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Edit Assignment") },
-                navigationIcon = {
-                    // Back button to go back to the list without saving.
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            EditAssignmentTopBar(onBackClick = onNavigateBack)
         }
-    ) { padding ->
-        Column(
+    ) { innerPadding ->
+        Surface(
             modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
+                .padding(innerPadding)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            color = MaterialTheme.colorScheme.background
         ) {
-            // Edit the Name of the Task.
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Edit the Details of the Task.
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            // --- STEP 2: Saving the Correction ---
-            // When clicked, we tell the Brain (ViewModel) to update the info.
-            Button(
-                onClick = {
-                    assignment?.let {
-                        viewModel.updateAssignment(it.copy(title = title, description = description))
-                        onNavigateBack()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = title.isNotBlank()
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Text("Save Changes")
+                EditAssignmentForm(
+                    title = titleText,
+                    onTitleChange = { titleText = it },
+                    description = descriptionText,
+                    onDescriptionChange = { descriptionText = it }
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                SaveAssignmentButton(
+                    onSave = {
+                        assignment?.let {
+                            viewModel.updateAssignment(it.copy(title = titleText, description = descriptionText))
+                            onNavigateBack()
+                        }
+                    },
+                    isEnabled = titleText.isNotBlank()
+                )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditAssignmentTopBar(onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Update Task") },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Discard and Return")
+            }
+        }
+    )
+}
+
+@Composable
+private fun EditAssignmentForm(
+    title: String,
+    onTitleChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Assignment Details",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        OutlinedTextField(
+            value = title,
+            onValueChange = onTitleChange,
+            label = { Text("Task Title") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium
+        )
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = onDescriptionChange,
+            label = { Text("Extended Description") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 150.dp),
+            shape = MaterialTheme.shapes.medium
+        )
+    }
+}
+
+@Composable
+private fun SaveAssignmentButton(onSave: () -> Unit, isEnabled: Boolean) {
+    Button(
+        onClick = onSave,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        enabled = isEnabled,
+        shape = MaterialTheme.shapes.large
+    ) {
+        Text(
+            text = "Confirm Changes",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
