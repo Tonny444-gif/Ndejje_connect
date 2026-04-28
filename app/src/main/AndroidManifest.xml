@@ -2,26 +2,38 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+        Ndejje Connect Android Manifest
+        This file defines the application's structure and core components.
+    -->
+
     <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/ndejje_logo"
         android:label="@string/app_name"
+        android:icon="@drawable/ndejje_logo"
         android:roundIcon="@drawable/ndejje_logo"
+        android:theme="@style/Theme.NdejjeConnect"
+        android:allowBackup="true"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NdejjeConnect">
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules">
+
+        <!--
+            Main UI Entry Point
+            Integrates Jetpack Compose and Navigation components.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.NdejjeConnect">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
     </application>
 
 </manifest>
