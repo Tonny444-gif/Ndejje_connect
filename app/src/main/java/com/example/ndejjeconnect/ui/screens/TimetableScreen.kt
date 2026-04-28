@@ -17,94 +17,180 @@ import com.example.ndejjeconnect.data.local.TimetableEntry
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.TimetableViewModel
 
-/**
- * TimetableScreen is the student's "Weekly Planner".
- * It shows which classes are happening on each day and allows adding new ones.
- */
 @Composable
 fun TimetableScreen(viewModel: TimetableViewModel, authViewModel: AuthViewModel) {
-    // 1. DATA AND STATE
     val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
     val selectedDay by viewModel.selectedDay.collectAsState()
     val entries by viewModel.timetableEntries.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
     val availableUnits by viewModel.availableUnits.collectAsState()
 
-    // Controls if the "Add Class" popup is visible
-    var showAddDialog by remember { mutableStateOf(false) }
+    var isAddClassModalVisible by remember { mutableStateOf(false) }
 
-    // Tell the timetable who the user is so it can suggest the right Course Units
     LaunchedEffect(currentUser) {
         viewModel.setUser(currentUser)
     }
 
-    // Figure out which day tab should be highlighted
-    val selectedTabIndex = days.indexOf(selectedDay).coerceAtLeast(0)
-
     Scaffold(
         floatingActionButton = {
-            // Floating "+" button to add a new class
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Class")
+            FloatingActionButton(
+                onClick = { isAddClassModalVisible = true },
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add New Class")
             }
         }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            
-            // DAY TABS: Clickable labels for Mon, Tue, Wed, etc.
-            ScrollableTabRow(
-                selectedTabIndex = selectedTabIndex,
-                edgePadding = 16.dp,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
-            ) {
-                days.forEach { day ->
-                    Tab(
-                        selected = selectedDay == day,
-                        onClick = { viewModel.selectDay(day) },
-                        text = { Text(day.take(3)) } // Shows shortened name like "Mon"
-                    )
-                }
-            }
+    ) { innerPadding ->
+        Surface(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column {
+                DaySelector(
+                    days = days,
+                    selectedDay = selectedDay,
+                    onDaySelected = { viewModel.selectDay(it) }
+                )
 
-            // SCHEDULE LIST: Shows the actual classes for the chosen day
-            if (entries.isEmpty()) {
-                // Show a message if there are no classes for this day
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "No classes scheduled for $selectedDay", style = MaterialTheme.typography.bodyLarge)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Create a card for every class entry in the database
-                    items(entries) { entry ->
-                        TimetableCard(entry, onDelete = { viewModel.removeEntry(entry.id) })
-                    }
+                if (entries.isEmpty()) {
+                    EmptyTimetableView(selectedDay = selectedDay)
+                } else {
+                    TimetableList(
+                        entries = entries,
+                        onDeleteEntry = { viewModel.removeEntry(it) }
+                    )
                 }
             }
         }
     }
 
-    // THE ADD CLASS POPUP
-    if (showAddDialog) {
+    if (isAddClassModalVisible) {
         AddTimetableEntryDialog(
             availableUnits = availableUnits,
             selectedDay = selectedDay,
-            onDismiss = { showAddDialog = false },
+            onDismiss = { isAddClassModalVisible = false },
             onSave = { name, start, end, venue ->
                 viewModel.addEntry(name, selectedDay, start, end, venue)
-                showAddDialog = false
+                isAddClassModalVisible = false
             }
         )
     }
 }
 
-/**
- * AddTimetableEntryDialog is the form that pops up to add a new class.
- */
+@Composable
+private fun DaySelector(
+    days: List<String>,
+    selectedDay: String,
+    onDaySelected: (String) -> Unit
+) {
+    val selectedTabIndex = days.indexOf(selectedDay).coerceAtLeast(0)
+    
+    ScrollableTabRow(
+        selectedTabIndex = selectedTabIndex,
+        edgePadding = 16.dp,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.primary,
+        divider = {}
+    ) {
+        days.forEach { day ->
+            Tab(
+                selected = selectedDay == day,
+                onClick = { onDaySelected(day) },
+                text = { 
+                    Text(
+                        text = day.take(3),
+                        style = MaterialTheme.typography.labelLarge
+                    ) 
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyTimetableView(selectedDay: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "No classes for $selectedDay",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun TimetableList(
+    entries: List<TimetableEntry>,
+    onDeleteEntry: (Int) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(entries, key = { it.id }) { entry ->
+            TimetableCard(
+                entry = entry,
+                onDelete = { onDeleteEntry(entry.id) }
+            )
+        }
+    }
+}
+
+@Composable
+fun TimetableCard(entry: TimetableEntry, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = entry.courseName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${entry.startTime} - ${entry.endTime}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = " • ",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = entry.venue,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Remove Entry",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTimetableEntryDialog(
@@ -121,10 +207,9 @@ fun AddTimetableEntryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Class to $selectedDay") },
+        title = { Text("Add Class ($selectedDay)") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // DROPDOWN: Shows Course Units based on the student's course
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
@@ -133,7 +218,7 @@ fun AddTimetableEntryDialog(
                         value = selectedUnitName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Select Unit") },
+                        label = { Text("Course Unit") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
@@ -153,15 +238,31 @@ fun AddTimetableEntryDialog(
                     }
                 }
 
-                // Input boxes for Time and Venue
-                OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("Start Time") })
-                OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("End Time") })
-                OutlinedTextField(value = venue, onValueChange = { venue = it }, label = { Text("Venue") })
+                OutlinedTextField(
+                    value = startTime,
+                    onValueChange = { startTime = it },
+                    label = { Text("Start") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                OutlinedTextField(
+                    value = endTime,
+                    onValueChange = { endTime = it },
+                    label = { Text("End") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                OutlinedTextField(
+                    value = venue,
+                    onValueChange = { venue = it },
+                    label = { Text("Room / Venue") },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
             Button(onClick = { onSave(selectedUnitName, startTime, endTime, venue) }) {
-                Text("Add")
+                Text("Confirm")
             }
         },
         dismissButton = {
@@ -170,45 +271,10 @@ fun AddTimetableEntryDialog(
     )
 }
 
-/**
- * TimetableCard displays a single class's details (Name, Time, Room).
- */
-@Composable
-fun TimetableCard(entry: TimetableEntry, onDelete: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = entry.courseName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(text = "${entry.startTime} - ${entry.endTime}", style = MaterialTheme.typography.bodyMedium)
-                Text(text = "Venue: ${entry.venue}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
-            }
-            // Bin button to delete the class
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
-            }
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun TimetableScreenPreview() {
     com.example.ndejjeconnect.ui.theme.NdejjeConnectTheme {
-        TimetableCard(
-            entry = TimetableEntry(
-                courseName = "Mobile Programming",
-                dayOfWeek = "Monday",
-                startTime = "10:00 AM",
-                endTime = "1:00 PM",
-                venue = "Main Lab"
-            ),
-            onDelete = {}
-        )
+        // Mock preview
     }
 }

@@ -10,12 +10,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * AuthViewModel: The "Security Guard & ID Manager".
- * 
- * Think of this as the person sitting at the university entrance.
- * - They check your ID (Login).
- * - They help new students sign the register (Register).
- * - They remember who is currently inside the building (Session Management).
+ * AuthViewModel handles authentication logic, including login, registration,
+ * and user session management.
  */
 class AuthViewModel(private val repository: MainRepository) : ViewModel() {
 
@@ -26,49 +22,60 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     /**
-     * Login: Checking the ID.
-     * We ask the "Manager" (Repository) to find the student in the database.
-     * If the password matches, we let them in.
+     * Authenticates a user with the provided registration number and password.
      */
     fun login(regNumber: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val user = repository.getUserByRegNumber(regNumber)
-            if (user != null && user.password == password) {
-                _currentUser.value = user
-                _authState.value = AuthState.Success
-            } else {
-                _authState.value = AuthState.Error("Invalid registration number or password")
+            try {
+                val user = repository.getUserByRegNumber(regNumber)
+                if (user != null && user.password == password) {
+                    _currentUser.value = user
+                    _authState.value = AuthState.Success
+                } else {
+                    _authState.value = AuthState.Error("Invalid credentials provided.")
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("An unexpected error occurred during login.")
             }
         }
     }
 
     /**
-     * Register: Adding a new student to the books.
-     * We check if the student is already registered. If not, we create a new "file" (User).
+     * Registers a new user account in the system.
      */
-    fun register(name: String, regNumber: String, password: String, level: String, course: String) {
+    fun register(
+        name: String, 
+        regNumber: String, 
+        password: String, 
+        level: String, 
+        course: String
+    ) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val existingUser = repository.getUserByRegNumber(regNumber)
-            if (existingUser == null) {
-                val newUser = User(
-                    regNumber = regNumber, 
-                    name = name, 
-                    password = password,
-                    level = level,
-                    course = course
-                )
-                repository.registerUser(newUser)
-                _authState.value = AuthState.RegisterSuccess
-            } else {
-                _authState.value = AuthState.Error("User with this registration number already exists")
+            try {
+                val existingUser = repository.getUserByRegNumber(regNumber)
+                if (existingUser == null) {
+                    val newUser = User(
+                        regNumber = regNumber,
+                        name = name,
+                        password = password,
+                        level = level,
+                        course = course
+                    )
+                    repository.registerUser(newUser)
+                    _authState.value = AuthState.RegisterSuccess
+                } else {
+                    _authState.value = AuthState.Error("Account already exists for this registration number.")
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Registration failed. Please try again.")
             }
         }
     }
 
     /**
-     * Logout: Handing back the ID and leaving.
+     * Terminates the current user session.
      */
     fun logout() {
         _currentUser.value = null
@@ -76,22 +83,35 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     }
 
     /**
-     * Update Profile: Changing the name on your ID card.
+     * Updates the profile information for the currently authenticated user.
      */
     fun updateProfile(name: String, profileImageUri: String?) {
         val user = _currentUser.value ?: return
         viewModelScope.launch {
-            val updatedUser = user.copy(name = name, profileImageUri = profileImageUri)
-            repository.updateUser(updatedUser)
-            _currentUser.value = updatedUser
+            try {
+                val updatedUser = user.copy(
+                    name = name, 
+                    profileImageUri = profileImageUri
+                )
+                repository.updateUser(updatedUser)
+                _currentUser.value = updatedUser
+            } catch (e: Exception) {
+                // Potential error handling for profile updates
+            }
         }
     }
 
+    /**
+     * Resets the authentication state to Idle.
+     */
     fun resetState() {
         _authState.value = AuthState.Idle
     }
 }
 
+/**
+ * Represents the various states of the authentication process.
+ */
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
