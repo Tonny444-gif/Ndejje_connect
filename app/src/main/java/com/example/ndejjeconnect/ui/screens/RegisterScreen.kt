@@ -1,30 +1,25 @@
 package com.example.ndejjeconnect.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
 import com.example.ndejjeconnect.R
 import com.example.ndejjeconnect.data.Academia
-import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.AuthState
+import com.example.ndejjeconnect.viewmodel.AuthViewModel
 
 /**
- * Register Screen: The "Sign Up" Desk.
- * 
- * Think of this screen like a student enrollment office. 
- * Before you can enter the main building (the Dashboard), you need to give the 
- * university your details (Name, Reg Number, Faculty) and create a password.
- * 
- * Once you "sign the book" (click Register), you are sent back to the 
- * "Check-in Desk" (Login Screen) to verify your new credentials.
+ * RegisterScreen provides the user interface for creating a new student account.
+ * It features dynamic course selection based on the selected academic level and faculty.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,16 +31,9 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var regNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var selectedLevel by remember { mutableStateOf(Academia.levels[2]) } // Bachelor's Degree
-    var selectedFaculty by remember { mutableStateOf(Academia.faculties[0]) } // Science & Computing
+    var selectedLevel by remember { mutableStateOf(Academia.levels[2]) }
+    var selectedFaculty by remember { mutableStateOf(Academia.faculties[0]) }
     var selectedCourse by remember { mutableStateOf("Bachelor of Computer Science (BCS)") }
-    
-    val levels = Academia.levels
-    val faculties = Academia.faculties
-
-    var levelExpanded by remember { mutableStateOf(false) }
-    var facultyExpanded by remember { mutableStateOf(false) }
-    var courseExpanded by remember { mutableStateOf(false) }
 
     val authState by viewModel.authState.collectAsState()
 
@@ -56,195 +44,224 @@ fun RegisterScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(dimensionResource(id = R.dimen.padding_large)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        // --- STEP 1: Branding ---
-        // Showing the University Name so users know where they are.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(dimensionResource(id = R.dimen.padding_large))
+                .verticalScroll(rememberScrollState())
+                .systemBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            RegisterHeader()
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (authState is AuthState.Error) {
+                Text(
+                    text = (authState as AuthState.Error).message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
+            RegistrationForm(
+                name = name,
+                onNameChange = { name = it },
+                regNumber = regNumber,
+                onRegNumberChange = { regNumber = it },
+                password = password,
+                onPasswordChange = { password = it },
+                selectedLevel = selectedLevel,
+                onLevelChange = { 
+                    selectedLevel = it
+                    selectedCourse = Academia.getCourses(selectedFaculty, it).firstOrNull() ?: ""
+                },
+                selectedFaculty = selectedFaculty,
+                onFacultyChange = { 
+                    selectedFaculty = it
+                    selectedCourse = Academia.getCourses(it, selectedLevel).firstOrNull() ?: ""
+                },
+                selectedCourse = selectedCourse,
+                onCourseChange = { selectedCourse = it }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            RegisterActions(
+                isLoading = authState is AuthState.Loading,
+                isFormValid = name.isNotBlank() && regNumber.isNotBlank() && 
+                        password.isNotBlank() && selectedCourse.isNotBlank(),
+                onRegisterClick = { 
+                    viewModel.register(name, regNumber, password, selectedLevel, selectedCourse) 
+                },
+                onLoginClick = onNavigateToLogin
+            )
+        }
+    }
+}
+
+@Composable
+private fun RegisterHeader() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = stringResource(id = R.string.university_name),
-            fontSize = dimensionResource(id = R.dimen.text_size_large).value.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.primary
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.ExtraBold
         )
         Text(
             text = stringResource(id = R.string.create_account),
-            fontSize = dimensionResource(id = R.dimen.text_size_medium).value.sp,
-            modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_medium))
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.secondary
         )
+    }
+}
 
-        // --- STEP 2: Error Handling ---
-        // If the "Brain" (ViewModel) says something went wrong, we show it here.
-        if (authState is AuthState.Error) {
-            Text(
-                text = (authState as AuthState.Error).message,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_medium))
-            )
-        }
-
-        // --- STEP 3: Identity Details ---
-        // Collecting the student's name and registration number.
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RegistrationForm(
+    name: String,
+    onNameChange: (String) -> Unit,
+    regNumber: String,
+    onRegNumberChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    selectedLevel: String,
+    onLevelChange: (String) -> Unit,
+    selectedFaculty: String,
+    onFacultyChange: (String) -> Unit,
+    selectedCourse: String,
+    onCourseChange: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = onNameChange,
             label = { Text(stringResource(id = R.string.full_name)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = regNumber,
-            onValueChange = { regNumber = it },
+            onValueChange = onRegNumberChange,
             label = { Text(stringResource(id = R.string.reg_number)) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
-        
-        Spacer(modifier = Modifier.height(8.dp))
 
-        // --- STEP 4: Academic Selection ---
-        // Dropdown menus to pick Level (e.g., Bachelor), Faculty, and Course.
-        // It's like picking your department in the university.
-        
-        // Level Selection
-        ExposedDropdownMenuBox(
-            expanded = levelExpanded,
-            onExpandedChange = { levelExpanded = !levelExpanded }
-        ) {
-            OutlinedTextField(
-                value = selectedLevel,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Academic Level") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
-            )
-            ExposedDropdownMenu(
-                expanded = levelExpanded,
-                onDismissRequest = { levelExpanded = false }
-            ) {
-                levels.forEach { level ->
-                    DropdownMenuItem(
-                        text = { Text(level) },
-                        onClick = {
-                            selectedLevel = level
-                            levelExpanded = false
-                            // Reset course selection when level changes
-                            selectedCourse = Academia.getCourses(selectedFaculty, selectedLevel).firstOrNull() ?: "N/A"
-                        }
-                    )
-                }
-            }
-        }
+        AcademicDropdown(
+            label = "Academic Level",
+            options = Academia.levels,
+            selectedOption = selectedLevel,
+            onOptionSelected = onLevelChange
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        AcademicDropdown(
+            label = "Faculty",
+            options = Academia.faculties,
+            selectedOption = selectedFaculty,
+            onOptionSelected = onFacultyChange
+        )
 
-        // Faculty Selection
-        ExposedDropdownMenuBox(
-            expanded = facultyExpanded,
-            onExpandedChange = { facultyExpanded = !facultyExpanded }
-        ) {
-            OutlinedTextField(
-                value = selectedFaculty,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Faculty") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = facultyExpanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
-            )
-            ExposedDropdownMenu(
-                expanded = facultyExpanded,
-                onDismissRequest = { facultyExpanded = false }
-            ) {
-                faculties.forEach { faculty ->
-                    DropdownMenuItem(
-                        text = { Text(faculty) },
-                        onClick = {
-                            selectedFaculty = faculty
-                            facultyExpanded = false
-                            // Reset course selection when faculty changes
-                            selectedCourse = Academia.getCourses(selectedFaculty, selectedLevel).firstOrNull() ?: "N/A"
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Course Selection
         val availableCourses = Academia.getCourses(selectedFaculty, selectedLevel)
-        ExposedDropdownMenuBox(
-            expanded = courseExpanded,
-            onExpandedChange = { if (availableCourses.isNotEmpty()) courseExpanded = !courseExpanded }
-        ) {
-            OutlinedTextField(
-                value = selectedCourse,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Program/Course") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = courseExpanded) },
-                modifier = Modifier.menuAnchor().fillMaxWidth(),
-                placeholder = { if (availableCourses.isEmpty()) Text("No courses available for this level") }
-            )
-            if (availableCourses.isNotEmpty()) {
-                ExposedDropdownMenu(
-                    expanded = courseExpanded,
-                    onDismissRequest = { courseExpanded = false }
-                ) {
-                    availableCourses.forEach { course ->
-                        DropdownMenuItem(
-                            text = { Text(course) },
-                            onClick = {
-                                selectedCourse = course
-                                courseExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
+        AcademicDropdown(
+            label = "Program/Course",
+            options = availableCourses,
+            selectedOption = selectedCourse,
+            onOptionSelected = onCourseChange,
+            enabled = availableCourses.isNotEmpty()
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // --- STEP 5: Security ---
-        // Setting up a password to protect the account.
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = onPasswordChange,
             label = { Text(stringResource(id = R.string.password)) },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // --- STEP 6: Submission ---
-        // Clicking this sends the details to the "Manager" (Repository) to save them.
-        Button(
-            onClick = { viewModel.register(name, regNumber, password, selectedLevel, selectedCourse) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = name.isNotBlank() && regNumber.isNotBlank() && password.isNotBlank() && 
-                    selectedCourse != "N/A" && selectedCourse.isNotBlank() && authState !is AuthState.Loading
+            singleLine = true
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AcademicDropdown(
+    label: String,
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    enabled: Boolean = true
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded && enabled,
+        onExpandedChange = { if (enabled) expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selectedOption,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            enabled = enabled
+        )
+        if (options.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegisterActions(
+    isLoading: Boolean,
+    isFormValid: Boolean,
+    onRegisterClick: () -> Unit,
+    onLoginClick: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Button(
+            onClick = onRegisterClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            enabled = isFormValid && !isLoading
         ) {
-            if (authState is AuthState.Loading) {
+            if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(dimensionResource(id = R.dimen.progress_indicator_size)),
+                    modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = dimensionResource(id = R.dimen.progress_indicator_stroke)
+                    strokeWidth = 2.dp
                 )
             } else {
                 Text(stringResource(id = R.string.register))
             }
         }
 
-        // Link to go back to Login if the user already has an account.
-        TextButton(onClick = onNavigateToLogin) {
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = onLoginClick) {
             Text(stringResource(id = R.string.already_have_account_login))
         }
     }
