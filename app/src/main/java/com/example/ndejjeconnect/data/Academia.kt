@@ -421,6 +421,10 @@ object Academia {
 
     /**
      * Helper function to get units for a specific course.
+     * @param faculty The name of the faculty.
+     * @param level The academic level (e.g., "Bachelor's Degree").
+     * @param course The specific course name.
+     * @return A list of course units, or an empty list if not found.
      */
     fun getUnits(faculty: String?, level: String?, course: String?): List<String> {
         if (faculty == null || level == null || course == null) return emptyList()
@@ -429,9 +433,22 @@ object Academia {
 
     /**
      * Helper function to get courses for a faculty and level.
+     * @param faculty The name of the faculty.
+     * @param level The academic level.
+     * @return A list of course names available for that faculty and level.
      */
     fun getCourses(faculty: String?, level: String?): List<String> {
         if (faculty == null || level == null) return emptyList()
         return academicStructure[faculty]?.get(level)?.keys?.toList() ?: emptyList()
+    }
+
+    /**
+     * Helper function to get all courses for a specific faculty across all levels.
+     * @param faculty The name of the faculty.
+     * @return A list of all course names within the faculty.
+     */
+    fun getAllCoursesForFaculty(faculty: String?): List<String> {
+        if (faculty == null) return emptyList()
+        return academicStructure[faculty]?.values?.flatMap { it.keys } ?: emptyList()
     }
 }
