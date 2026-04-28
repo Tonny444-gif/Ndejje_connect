@@ -21,10 +21,6 @@ import com.example.ndejjeconnect.data.local.FinanceRecord
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.DashboardViewModel
 
-/**
- * FinanceScreen is the student's "Pocket Tracker".
- * It helps them keep track of school fees: what's total, what's paid, and what's left.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinanceScreen(
@@ -32,165 +28,231 @@ fun FinanceScreen(
     dashboardViewModel: DashboardViewModel,
     onNavigateBack: () -> Unit
 ) {
-    // 1. GETTING DATA
-    // Connect to the "Brains" to get current user and their money records
     val currentUser by authViewModel.currentUser.collectAsState()
     val financeRecord by dashboardViewModel.financeRecord.collectAsState()
 
-    // 2. FORM STATE: Temporary memory for the input boxes
-    var totalFees by remember { mutableStateOf("") }
-    var paidFees by remember { mutableStateOf("") }
+    var totalFeesText by remember { mutableStateOf("") }
+    var paidFeesText by remember { mutableStateOf("") }
 
-    // When the screen opens, pre-fill the boxes with data already saved in the database
     LaunchedEffect(financeRecord) {
         financeRecord?.let {
-            totalFees = it.totalFees.toLong().toString()
-            paidFees = it.amountPaid.toLong().toString()
+            totalFeesText = it.totalFees.toLong().toString()
+            paidFeesText = it.amountPaid.toLong().toString()
         }
     }
 
-    // 3. CALCULATIONS: Doing the math for progress and balance
-    val total = totalFees.toDoubleOrNull() ?: 0.0
-    val paid = paidFees.toDoubleOrNull() ?: 0.0
-    val progress = if (total > 0) (paid / total).coerceIn(0.0, 1.0).toFloat() else 0f
-    val balance = (total - paid).coerceAtLeast(0.0)
+    val totalAmount = totalFeesText.toDoubleOrNull() ?: 0.0
+    val paidAmount = paidFeesText.toDoubleOrNull() ?: 0.0
+    val paymentProgress = if (totalAmount > 0) (paidAmount / totalAmount).coerceIn(0.0, 1.0).toFloat() else 0f
+    val balanceAmount = (totalAmount - paidAmount).coerceAtLeast(0.0)
 
     Scaffold(
         topBar = {
-            // Header bar with a back button
-            TopAppBar(
-                title = { Text("Financial Status") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
+            FinanceTopBar(onBackClick = onNavigateBack)
         },
         floatingActionButton = {
-            // The "Save" button that floats at the bottom right
-            ExtendedFloatingActionButton(
+            SaveFinanceButton(
                 onClick = {
                     currentUser?.let {
                         dashboardViewModel.updateFinance(
-                            FinanceRecord(it.regNumber, total, paid)
+                            FinanceRecord(it.regNumber, totalAmount, paidAmount)
                         )
                     }
-                },
-                icon = { Icon(Icons.Default.Save, contentDescription = null) },
-                text = { Text("Save Status") }
+                }
             )
         }
-    ) { padding ->
-        // The main scrollable content area
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Text(
-                text = "Fees Tracker",
+                text = "Fees Tracking",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
 
-            // INPUT SECTION: Where the student types in their fees info
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    OutlinedTextField(
-                        value = totalFees,
-                        onValueChange = { totalFees = it },
-                        label = { Text("Total Semester Fees (UGX)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            FeesInputSection(
+                totalFees = totalFeesText,
+                onTotalFeesChange = { totalFeesText = it },
+                paidFees = paidFeesText,
+                onPaidFeesChange = { paidFeesText = it }
+            )
 
-                    OutlinedTextField(
-                        value = paidFees,
-                        onValueChange = { paidFees = it },
-                        label = { Text("Amount Paid (UGX)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
+            PaymentSummaryCard(
+                progress = paymentProgress,
+                paid = paidAmount,
+                balance = balanceAmount
+            )
 
-            // VISUAL SUMMARY: A circle chart showing how much is paid
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "Payment Progress", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Box(contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.size(120.dp),
-                            strokeWidth = 12.dp,
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                        )
-                        Text(
-                            text = "${(progress * 100).toInt()}%",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // PAID vs BALANCE numbers
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(text = "Paid", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                            Text(text = "${paid.toLong()} UGX", fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(text = "Balance", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                            Text(text = "${balance.toLong()} UGX", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // A linear progress bar as an alternative view
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                    )
-                }
-            }
-            
-            // Helpful school tips at the bottom
-            FinanceBulletPoint("Ensure you clear 100% of the fees to sit for exams.")
-            FinanceBulletPoint("Registration is only complete after 50% payment.")
+            FinanceTipsSection()
         }
     }
 }
 
-/**
- * A small reusable component for showing a bullet point tip.
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FinanceBulletPoint(text: String) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-        Text("• ", fontWeight = FontWeight.Bold)
-        Text(text, style = MaterialTheme.typography.bodyMedium)
+private fun FinanceTopBar(onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Financial Status") },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Navigate Back")
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = Color.White,
+            navigationIconContentColor = Color.White
+        )
+    )
+}
+
+@Composable
+private fun SaveFinanceButton(onClick: () -> Unit) {
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = Color.White,
+        icon = { Icon(Icons.Default.Save, contentDescription = null) },
+        text = { Text("Save Records") }
+    )
+}
+
+@Composable
+private fun FeesInputSection(
+    totalFees: String,
+    onTotalFeesChange: (String) -> Unit,
+    paidFees: String,
+    onPaidFeesChange: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            OutlinedTextField(
+                value = totalFees,
+                onValueChange = onTotalFeesChange,
+                label = { Text("Total Semester Fees (UGX)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            OutlinedTextField(
+                value = paidFees,
+                onValueChange = onPaidFeesChange,
+                label = { Text("Amount Paid (UGX)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+        }
+    }
+}
+
+@Composable
+private fun PaymentSummaryCard(
+    progress: Float,
+    paid: Double,
+    balance: Double
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Payment Progress",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.size(140.dp),
+                    strokeWidth = 12.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+                Text(
+                    text = "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                FinanceMetric(label = "Paid", amount = paid, color = Color(0xFF2E7D32))
+                FinanceMetric(label = "Balance", amount = balance, color = MaterialTheme.colorScheme.error, isEnd = true)
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun FinanceMetric(label: String, amount: Double, color: Color, isEnd: Boolean = false) {
+    Column(horizontalAlignment = if (isEnd) Alignment.End else Alignment.Start) {
+        Text(text = label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.outline)
+        Text(text = "${amount.toLong()} UGX", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = color)
+    }
+}
+
+@Composable
+private fun FinanceTipsSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        FinanceBulletPoint("All semester fees must be cleared before the final examination period.")
+        FinanceBulletPoint("Registration requirements stipulate a minimum of 50% tuition payment.")
+        FinanceBulletPoint("Keep your physical payment receipts safe for verification purposes.")
+    }
+}
+
+@Composable
+private fun FinanceBulletPoint(text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = "• ",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
