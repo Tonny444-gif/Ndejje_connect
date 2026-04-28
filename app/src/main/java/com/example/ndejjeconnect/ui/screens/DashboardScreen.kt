@@ -32,6 +32,10 @@ import com.example.ndejjeconnect.data.local.*
 import com.example.ndejjeconnect.viewmodel.AuthViewModel
 import com.example.ndejjeconnect.viewmodel.DashboardViewModel
 
+/**
+ * The main entry point of the application after login.
+ * Displays a personalized overview of the student's academic and financial status.
+ */
 @Composable
 fun DashboardScreen(
     authViewModel: AuthViewModel,
@@ -96,6 +100,7 @@ fun DashboardContent(
     onAddHighlight: (String) -> Unit,
     onRemoveFeedItem: (FeedItem) -> Unit
 ) {
+    // UI state for the highlight creation dialog
     var isAddHighlightDialogOpen by remember { mutableStateOf(false) }
 
     if (isAddHighlightDialogOpen) {
@@ -120,6 +125,7 @@ fun DashboardContent(
         }
 
         item {
+            // Displays student name, course, and current GPA
             UserInfoSection(
                 userName = userName,
                 userLevel = userLevel,
@@ -130,6 +136,7 @@ fun DashboardContent(
         }
 
         item {
+            // Bento-style cards for quick status updates
             OverviewCards(
                 nextClass = nextClass,
                 pendingCount = pendingCount,
