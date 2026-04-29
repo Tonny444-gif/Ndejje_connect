@@ -102,6 +102,12 @@ class LibraryViewModel(private val repository: MainRepository) : ViewModel() {
         _searchQuery.value = query
     }
 
+    fun addBook(book: Book) {
+        viewModelScope.launch {
+            repository.insertBook(book)
+        }
+    }
+
     /**
      * Reserves a specific book for the current user.
      */
@@ -137,26 +143,6 @@ class LibraryViewModel(private val repository: MainRepository) : ViewModel() {
     // --- Internal Helpers ---
 
     private fun initializeLibraryDefaults() {
-        viewModelScope.launch {
-            // Seed Books if necessary
-            val defaults = listOf(
-                Book(title = "Android Programming: The Big Nerd Ranch Guide", author = "Bill Phillips", category = "Computing", isDigital = true),
-                Book(title = "Clean Architecture", author = "Robert C. Martin", category = "Software Engineering", isDigital = false, floor = "2nd Floor", aisle = "A1", shelf = "S3"),
-                Book(title = "The Pragmatic Programmer", author = "Andrew Hunt", category = "Computing", isDigital = true),
-                Book(title = "Modern Operating Systems", author = "Andrew S. Tanenbaum", category = "Computer Science", isDigital = false, floor = "1st Floor", aisle = "B4", shelf = "S7"),
-                Book(title = "Design Patterns: Elements of Reusable Object-Oriented Software", author = "Erich Gamma", category = "Software Engineering", isDigital = false, floor = "2nd Floor", aisle = "A2", shelf = "S1")
-            )
-            defaults.forEach { repository.insertBook(it) }
-
-            // Seed Spaces if necessary
-            val spaces = listOf(
-                StudySpace(name = "Quiet Pod A", type = "Pod", capacity = 1),
-                StudySpace(name = "Group Room 1", type = "Group Room", capacity = 6),
-                StudySpace(name = "Individual Desk 12", type = "Desk", capacity = 1),
-                StudySpace(name = "Media Room", type = "Group Room", capacity = 4),
-                StudySpace(name = "Quiet Pod B", type = "Pod", capacity = 1)
-            )
-            spaces.forEach { repository.insertSpace(it) }
-        }
+        // Data cleanup: Removed seeding of demo data to allow only 'real' data added via the interface.
     }
 }

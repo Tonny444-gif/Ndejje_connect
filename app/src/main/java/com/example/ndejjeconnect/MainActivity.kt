@@ -160,6 +160,13 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
+                        composable(Screen.Librarian.route) {
+                            val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
+                            LibrarianScreen(
+                                viewModel = libraryViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
                         composable(Screen.Register.route) {
                             RegisterScreen(
                                 viewModel = authViewModel,
