@@ -7,8 +7,8 @@ import androidx.compose.ui.graphics.Color
  */
 
 // Dark Mode Palette
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
+val Purple80 = Color(0xFFD9BCFF)
+val PurpleGrey80 = Color(0xFFCEC2DC)
 val Pink80 = Color(0xFFEFB8C8)
 
 // Light Mode Palette
