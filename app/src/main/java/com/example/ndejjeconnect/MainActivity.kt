@@ -151,6 +151,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToPassreset = {
                                     navController.navigate(Screen.Passreset.route)
+                                },
+                                onNavigateToLibrarian = {
+                                    navController.navigate(Screen.Librarian.route)
                                 }
                             )
                         }

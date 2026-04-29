@@ -53,7 +53,8 @@ private fun LoginContent(
     authState: AuthState,
     onLoginAction: (String, String) -> Unit,
     onRegisterNavigation: () -> Unit,
-    onPassresetNavigation: () -> Unit
+    onPassresetNavigation: () -> Unit,
+    onLibrarianNavigation: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -93,7 +94,8 @@ private fun LoginContent(
         LoginActions(
             isLoading = authState is AuthState.Loading,
             onLoginClick = { onLoginAction(email, password) },
-            onRegisterClick = onRegisterNavigation
+            onRegisterClick = onRegisterNavigation,
+            onLibrarianClick = onLibrarianNavigation
         )
     }
 }
@@ -171,9 +173,13 @@ private fun LoginForm(
 private fun LoginActions(
     isLoading: Boolean,
     onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    onLibrarianClick: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Button(
             onClick = onLoginClick,
             modifier = Modifier
@@ -195,11 +201,24 @@ private fun LoginActions(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        TextButton(onClick = onRegisterClick) {
-            Text(
-                text = stringResource(id = R.string.no_account_signup),
-                style = MaterialTheme.typography.labelLarge
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onRegisterClick) {
+                Text(
+                    text = stringResource(id = R.string.no_account_signup),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+
+            TextButton(onClick = onLibrarianClick) {
+                Text(
+                    text = "Librarian",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }
