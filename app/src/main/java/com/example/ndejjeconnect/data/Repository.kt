@@ -33,6 +33,7 @@ class MainRepository(
 
     // User/Auth logic
     suspend fun getUserByRegNumber(regNumber: String) = userDao.getUserByRegNumber(regNumber)
+    suspend fun getUserByEmail(email: String) = userDao.getUserByEmail(email)
     suspend fun registerUser(user: User) = userDao.insertUser(user)
     suspend fun updateUser(user: User) = userDao.updateUser(user)
 

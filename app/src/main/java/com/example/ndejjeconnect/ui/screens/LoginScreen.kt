@@ -24,7 +24,8 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onNavigateToPassreset: () -> Unit
+    onNavigateToPassreset: () -> Unit,
+    onNavigateToLibrarian: () -> Unit
 ) {
     val authState by viewModel.authState.collectAsState()
 
@@ -43,7 +44,8 @@ fun LoginScreen(
             authState = authState,
             onLoginAction = { email, pass -> viewModel.login(email, pass) },
             onRegisterNavigation = onNavigateToRegister,
-            onPassresetNavigation = onNavigateToPassreset
+            onPassresetNavigation = onNavigateToPassreset,
+            onLibrarianNavigation = onNavigateToLibrarian
         )
     }
 }
