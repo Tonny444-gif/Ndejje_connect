@@ -151,12 +151,22 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToPassreset = {
                                     navController.navigate(Screen.Passreset.route)
+                                },
+                                onNavigateToLibrarian = {
+                                    navController.navigate(Screen.Librarian.route)
                                 }
                             )
                         }
                         composable(Screen.Passreset.route) {
                             PassresetScreen(
                                 viewModel = authViewModel,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable(Screen.Librarian.route) {
+                            val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
+                            LibrarianScreen(
+                                viewModel = libraryViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }

@@ -30,15 +30,15 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
      * We ask the "Manager" (Repository) to find the student in the database.
      * If the password matches, we let them in.
      */
-    fun login(regNumber: String, password: String) {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val user = repository.getUserByRegNumber(regNumber)
+            val user = repository.getUserByEmail(email)
             if (user != null && user.password == password) {
                 _currentUser.value = user
                 _authState.value = AuthState.Success
             } else {
-                _authState.value = AuthState.Error("Invalid registration number or password")
+                _authState.value = AuthState.Error("Invalid email or password")
             }
         }
     }
@@ -47,13 +47,14 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
      * Register: Adding a new student to the books.
      * We check if the student is already registered. If not, we create a new "file" (User).
      */
-    fun register(name: String, regNumber: String, password: String, level: String, course: String) {
+    fun register(name: String, email: String, regNumber: String, password: String, level: String, course: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val existingUser = repository.getUserByRegNumber(regNumber)
+            val existingUser = repository.getUserByEmail(email)
             if (existingUser == null) {
                 val newUser = User(
-                    regNumber = regNumber, 
+                    regNumber = regNumber,
+                    email = email,
                     name = name, 
                     password = password,
                     level = level,
@@ -62,7 +63,7 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
                 repository.registerUser(newUser)
                 _authState.value = AuthState.RegisterSuccess
             } else {
-                _authState.value = AuthState.Error("User with this registration number already exists")
+                _authState.value = AuthState.Error("User with this email already exists")
             }
         }
     }
@@ -90,6 +91,18 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     fun resetState() {
         _authState.value = AuthState.Idle
     }
+
+    fun resetPassword(regNumber: String, email: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            val user = repository.getUserByEmail(email)
+            if (user != null && user.regNumber == regNumber) {
+                _authState.value = AuthState.PasswordResetInitiated
+            } else {
+                _authState.value = AuthState.Error("User not found with provided registration number and email")
+            }
+        }
+    }
 }
 
 sealed class AuthState {
@@ -97,5 +110,6 @@ sealed class AuthState {
     object Loading : AuthState()
     object Success : AuthState()
     object RegisterSuccess : AuthState()
+    object PasswordResetInitiated : AuthState()
     data class Error(val message: String) : AuthState()
 }

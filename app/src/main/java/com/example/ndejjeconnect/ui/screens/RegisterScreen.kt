@@ -29,6 +29,7 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var regNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var selectedLevel by remember { mutableStateOf(Academia.levels[2]) }
@@ -73,6 +74,8 @@ fun RegisterScreen(
             RegistrationForm(
                 name = name,
                 onNameChange = { name = it },
+                email = email,
+                onEmailChange = { email = it },
                 regNumber = regNumber,
                 onRegNumberChange = { regNumber = it },
                 password = password,
@@ -95,10 +98,10 @@ fun RegisterScreen(
 
             RegisterActions(
                 isLoading = authState is AuthState.Loading,
-                isFormValid = name.isNotBlank() && regNumber.isNotBlank() && 
+                isFormValid = name.isNotBlank() && email.isNotBlank() && regNumber.isNotBlank() && 
                         password.isNotBlank() && selectedCourse.isNotBlank(),
                 onRegisterClick = { 
-                    viewModel.register(name, regNumber, password, selectedLevel, selectedCourse) 
+                    viewModel.register(name, email, regNumber, password, selectedLevel, selectedCourse) 
                 },
                 onLoginClick = onNavigateToLogin
             )
@@ -128,6 +131,8 @@ private fun RegisterHeader() {
 private fun RegistrationForm(
     name: String,
     onNameChange: (String) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
     regNumber: String,
     onRegNumberChange: (String) -> Unit,
     password: String,
@@ -144,6 +149,14 @@ private fun RegistrationForm(
             value = name,
             onValueChange = onNameChange,
             label = { Text(stringResource(id = R.string.full_name)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = onEmailChange,
+            label = { Text("Email Address") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )

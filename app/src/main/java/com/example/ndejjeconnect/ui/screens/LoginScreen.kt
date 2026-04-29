@@ -23,7 +23,9 @@ import com.example.ndejjeconnect.viewmodel.AuthViewModel
 fun LoginScreen(
     viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToPassreset: () -> Unit,
+    onNavigateToLibrarian: () -> Unit
 ) {
     val authState by viewModel.authState.collectAsState()
 
@@ -40,8 +42,10 @@ fun LoginScreen(
     ) {
         LoginContent(
             authState = authState,
-            onLoginAction = { reg, pass -> viewModel.login(reg, pass) },
-            onRegisterNavigation = onNavigateToRegister
+            onLoginAction = { email, pass -> viewModel.login(email, pass) },
+            onRegisterNavigation = onNavigateToRegister,
+            onPassresetNavigation = onNavigateToPassreset,
+            onLibrarianNavigation = onNavigateToLibrarian
         )
     }
 }
@@ -50,9 +54,11 @@ fun LoginScreen(
 private fun LoginContent(
     authState: AuthState,
     onLoginAction: (String, String) -> Unit,
-    onRegisterNavigation: () -> Unit
+    onRegisterNavigation: () -> Unit,
+    onPassresetNavigation: () -> Unit,
+    onLibrarianNavigation: () -> Unit
 ) {
-    var regNumber by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Column(
@@ -70,18 +76,28 @@ private fun LoginContent(
         AuthenticationStatus(authState = authState)
 
         LoginForm(
-            regNumber = regNumber,
-            onRegNumberChange = { regNumber = it },
+            email = email,
+            onEmailChange = { email = it },
             password = password,
             onPasswordChange = { password = it }
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(
+            onClick = onPassresetNavigation,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Forgot Password?")
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         LoginActions(
             isLoading = authState is AuthState.Loading,
-            onLoginClick = { onLoginAction(regNumber, password) },
-            onRegisterClick = onRegisterNavigation
+            onLoginClick = { onLoginAction(email, password) },
+            onRegisterClick = onRegisterNavigation,
+            onLibrarianClick = onLibrarianNavigation
         )
     }
 }
@@ -128,16 +144,16 @@ private fun AuthenticationStatus(authState: AuthState) {
 
 @Composable
 private fun LoginForm(
-    regNumber: String,
-    onRegNumberChange: (String) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(
-            value = regNumber,
-            onValueChange = onRegNumberChange,
-            label = { Text(stringResource(id = R.string.reg_number)) },
+            value = email,
+            onValueChange = onEmailChange,
+            label = { Text("Email Address") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             shape = MaterialTheme.shapes.medium
@@ -159,9 +175,13 @@ private fun LoginForm(
 private fun LoginActions(
     isLoading: Boolean,
     onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    onLibrarianClick: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Button(
             onClick = onLoginClick,
             modifier = Modifier
@@ -183,11 +203,24 @@ private fun LoginActions(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        TextButton(onClick = onRegisterClick) {
-            Text(
-                text = stringResource(id = R.string.no_account_signup),
-                style = MaterialTheme.typography.labelLarge
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onRegisterClick) {
+                Text(
+                    text = stringResource(id = R.string.no_account_signup),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+
+            TextButton(onClick = onLibrarianClick) {
+                Text(
+                    text = "Librarian",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }

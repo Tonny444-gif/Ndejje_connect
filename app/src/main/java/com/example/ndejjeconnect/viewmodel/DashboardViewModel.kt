@@ -151,16 +151,6 @@ class DashboardViewModel(private val repository: MainRepository) : ViewModel() {
     }
 
     private fun initializeFeedData() {
-        viewModelScope.launch {
-            val defaults = listOf(
-                "Library hours extended to 10 PM for exam season.",
-                "Guest Lecture: 'Future of AI' this Friday at Main Hall.",
-                "New gym equipment installed in the sports complex.",
-                "Reminder: Register for Semester II modules by next Monday."
-            )
-            defaults.forEach { content ->
-                repository.insertFeedItem(FeedItem(content = content))
-            }
-        }
+        // Data cleanup: Removed seeding of demo data.
     }
 }
