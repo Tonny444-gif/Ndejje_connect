@@ -3,7 +3,7 @@
 
     <!-- Login & Registration -->
     <string name="university_name">NDEJJE CONNECT</string>
-    <string name="student_portal">Portal</string>
+    <string name="student_portal">Student Portal</string>
     <string name="create_account">Create Student Account</string>
     <string name="full_name">Full Name</string>
     <string name="reg_number">Registration Number</string>
