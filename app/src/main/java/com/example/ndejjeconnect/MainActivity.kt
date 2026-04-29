@@ -148,7 +148,16 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToRegister = {
                                     navController.navigate(Screen.Register.route)
+                                },
+                                onNavigateToPassreset = {
+                                    navController.navigate(Screen.Passreset.route)
                                 }
+                            )
+                        }
+                        composable(Screen.Passreset.route) {
+                            PassresetScreen(
+                                viewModel = authViewModel,
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable(Screen.Register.route) {
