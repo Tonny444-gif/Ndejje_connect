@@ -12,7 +12,7 @@
     <string name="register">Register</string>
     <string name="no_account_signup">Don\'t have an account? Sign Up</string>
     <string name="already_have_account_login">Already have an account? Login</string>
-    <string name="registration_successful">Registration successful! Please login.</string>
+    <string name="registration_successful">Registration successful, Please login.</string>
 
     <!-- General Actions -->
     <string name="action_save">Save</string>
