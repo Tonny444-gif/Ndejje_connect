@@ -17,7 +17,7 @@
     <!-- General Actions -->
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
-    <string name="action_delete">Remove</string>
+    <string name="action_delete">Delete</string>
     <string name="action_edit">Edit</string>
     <string name="action_close">Close</string>
     <string name="action_back">Back</string>
