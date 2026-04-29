@@ -293,7 +293,7 @@ fun SpaceCard(space: StudySpace, onBook: () -> Unit) {
             ) {
                 Text(
                     text = if (space.isOccupied) "Full" else "Book",
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
         }
