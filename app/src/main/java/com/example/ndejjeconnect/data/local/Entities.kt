@@ -53,6 +53,7 @@ data class TimetableEntry(
 data class User(
     @PrimaryKey val regNumber: String,
     val name: String,
+    val email: String,
     val password: String,
     val level: String,
     val course: String,
