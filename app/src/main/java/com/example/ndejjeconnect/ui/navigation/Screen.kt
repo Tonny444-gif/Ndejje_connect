@@ -3,6 +3,8 @@ package com.example.ndejjeconnect.ui.navigation
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
+    object Passreset : Screen("passreset")
+    object Librarian : Screen("librarian")
     object Dashboard : Screen("dashboard")
     object Timetable : Screen("timetable")
     object Assignments : Screen("assignments")
