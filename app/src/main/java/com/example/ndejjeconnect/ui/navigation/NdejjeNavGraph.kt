@@ -36,7 +36,26 @@ fun NdejjeNavGraph(
                 },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
+                },
+                onNavigateToPassreset = {
+                    navController.navigate(Screen.Passreset.route)
+                },
+                onNavigateToLibrarian = {
+                    navController.navigate(Screen.Librarian.route)
                 }
+            )
+        }
+        composable(Screen.Passreset.route) {
+            PassresetScreen(
+                viewModel = authViewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Librarian.route) {
+            val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
+            LibrarianScreen(
+                viewModel = libraryViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(Screen.Register.route) {
