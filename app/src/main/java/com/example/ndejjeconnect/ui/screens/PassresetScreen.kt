@@ -23,6 +23,7 @@ fun PassresetScreen(
 ) {
     var regNumber by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
     val authState by viewModel.authState.collectAsState()
 
     Scaffold(
@@ -46,17 +47,13 @@ fun PassresetScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Forgot Password?",
+                text = "Reset Your Password",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             
-            Text(
-                text = "Enter your details to initiate a password reset.",
-                modifier = Modifier.padding(vertical = 16.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (authState is AuthState.Error) {
                 Text(
@@ -66,45 +63,83 @@ fun PassresetScreen(
                 )
             }
 
-            if (authState is AuthState.PasswordResetInitiated) {
+            if (authState is AuthState.PasswordResetSuccess) {
                 Text(
-                    text = "Password reset initiated successfully. Please check your email for further instructions.",
+                    text = "Password reset successful! You can now log in with your new password.",
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
-            }
+                Button(onClick = onNavigateBack, modifier = Modifier.fillMaxWidth()) {
+                    Text("Go to Login")
+                }
+            } else if (authState is AuthState.PasswordResetVerified) {
+                val verifiedEmail = (authState as AuthState.PasswordResetVerified).email
+                Text(
+                    text = "Details verified for $verifiedEmail. Enter your new password below.",
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-            OutlinedTextField(
-                value = regNumber,
-                onValueChange = { regNumber = it },
-                label = { Text("Registration Number") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("New Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation()
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email Address") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                Button(
+                    onClick = { viewModel.confirmPasswordReset(verifiedEmail, newPassword) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = newPassword.isNotBlank() && authState !is AuthState.Loading
+                ) {
+                    if (authState is AuthState.Loading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Update Password")
+                    }
+                }
+            } else {
+                Text(
+                    text = "Enter your registration number and email to verify your identity.",
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                OutlinedTextField(
+                    value = regNumber,
+                    onValueChange = { regNumber = it },
+                    label = { Text("Registration Number") },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Button(
-                onClick = { viewModel.resetPassword(regNumber, email) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = regNumber.isNotBlank() && email.isNotBlank() && authState !is AuthState.Loading
-            ) {
-                if (authState is AuthState.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Reset Password")
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email Address") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { viewModel.resetPassword(regNumber, email) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = regNumber.isNotBlank() && email.isNotBlank() && authState !is AuthState.Loading
+                ) {
+                    if (authState is AuthState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Verify Details")
+                    }
                 }
             }
         }

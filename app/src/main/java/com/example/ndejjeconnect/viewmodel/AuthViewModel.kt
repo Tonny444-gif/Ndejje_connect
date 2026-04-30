@@ -33,7 +33,8 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val user = repository.getUserByEmail(email)
+            val normalizedEmail = email.trim().lowercase()
+            val user = repository.getUserByEmail(normalizedEmail)
             if (user != null && user.password == password) {
                 _currentUser.value = user
                 _authState.value = AuthState.Success
@@ -50,12 +51,13 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     fun register(name: String, email: String, regNumber: String, password: String, level: String, course: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val existingUser = repository.getUserByEmail(email)
+            val normalizedEmail = email.trim().lowercase()
+            val existingUser = repository.getUserByEmail(normalizedEmail)
             if (existingUser == null) {
                 val newUser = User(
-                    regNumber = regNumber,
-                    email = email,
-                    name = name, 
+                    regNumber = regNumber.trim(),
+                    email = normalizedEmail,
+                    name = name.trim(), 
                     password = password,
                     level = level,
                     course = course
@@ -95,11 +97,27 @@ class AuthViewModel(private val repository: MainRepository) : ViewModel() {
     fun resetPassword(regNumber: String, email: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val user = repository.getUserByEmail(email)
-            if (user != null && user.regNumber == regNumber) {
-                _authState.value = AuthState.PasswordResetInitiated
+            val normalizedEmail = email.trim().lowercase()
+            val user = repository.getUserByEmail(normalizedEmail)
+            if (user != null && user.regNumber == regNumber.trim()) {
+                _authState.value = AuthState.PasswordResetVerified(normalizedEmail)
             } else {
                 _authState.value = AuthState.Error("User not found with provided registration number and email")
+            }
+        }
+    }
+
+    fun confirmPasswordReset(email: String, newPassword: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            val normalizedEmail = email.trim().lowercase()
+            val user = repository.getUserByEmail(normalizedEmail)
+            if (user != null) {
+                val updatedUser = user.copy(password = newPassword)
+                repository.updateUser(updatedUser)
+                _authState.value = AuthState.PasswordResetSuccess
+            } else {
+                _authState.value = AuthState.Error("An error occurred. Please try again.")
             }
         }
     }
@@ -110,6 +128,7 @@ sealed class AuthState {
     object Loading : AuthState()
     object Success : AuthState()
     object RegisterSuccess : AuthState()
-    object PasswordResetInitiated : AuthState()
+    data class PasswordResetVerified(val email: String) : AuthState()
+    object PasswordResetSuccess : AuthState()
     data class Error(val message: String) : AuthState()
 }

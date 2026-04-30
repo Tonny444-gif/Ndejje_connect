@@ -67,8 +67,12 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = {
-                        // View Logic: Only show bottom navigation if NOT on Login or Register screens
-                        if (currentRoute != Screen.Login.route && currentRoute != Screen.Register.route && currentRoute != null) {
+                        // View Logic: Only show bottom navigation if NOT on Login, Register, Passreset, or Librarian screens
+                        if (currentRoute != Screen.Login.route && 
+                            currentRoute != Screen.Register.route && 
+                            currentRoute != Screen.Passreset.route &&
+                            currentRoute != Screen.Librarian.route &&
+                            currentRoute != null) {
                             NavigationBar {
                                 NavigationBarItem(
                                     icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
