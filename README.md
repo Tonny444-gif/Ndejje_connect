@@ -2,6 +2,14 @@
 
 NdejjeConnect is a modern Android application designed as a comprehensive student portal for Ndejje University. Built with Jetpack Compose and following Clean Architecture principles, it integrates academic management, library services, and student life into a single, intuitive interface.
 
+
+Team Roster:
+
+OKOL BENARD TONNY   :           24/2/314/W/403
+NAMUYANJA RENITA KYEYUNE  :     25/2/314/WJ/199
+TENDO ASHLEY               :     24/2/306/WJ/007
+ATUHAIRE TUMUSIIME        :        25/2/314/W/2122
+
 Features
 
 ### Academic Management
