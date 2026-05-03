@@ -5,10 +5,10 @@ NdejjeConnect is a modern Android application designed as a comprehensive studen
 
 Team Roster:
 
-OKOL BENARD TONNY   :           24/2/314/W/403
-NAMUYANJA RENITA KYEYUNE  :     25/2/314/WJ/199
-TENDO ASHLEY               :     24/2/306/WJ/007
-ATUHAIRE TUMUSIIME        :        25/2/314/W/2122
+OKOL BENARD TONNY   :           24/2/314/W/403    Quality Assurance ,Testing and Git Manager
+NAMUYANJA RENITA KYEYUNE  :     25/2/314/WJ/199     Documentation Lead
+TENDO ASHLEY               :     24/2/306/WJ/007    Project Lead Developer
+ATUHAIRE TUMUSIIME        :        25/2/314/W/2122    UI/UX Specialist
 
 Features
 
